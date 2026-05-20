@@ -16,6 +16,11 @@ const WMO = {
 };
 
 export default async function handler(req, res) {
+  if (!settings.lat || settings.lat === 'YOUR_LATITUDE' ||
+      !settings.lon || settings.lon === 'YOUR_LONGITUDE') {
+    return res.status(503).json({ error: 'weather not configured' });
+  }
+
   const now = Date.now();
   if (cache && now - cacheAt < TTL) return res.json(cache);
 
