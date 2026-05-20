@@ -5,6 +5,12 @@ let cache = null;
 let cacheAt = 0;
 const TTL = 5 * 60 * 1000;
 
+const COLOR_MAP = {
+  '1': '#7986cb', '2': '#33b679', '3': '#8e24aa', '4': '#e67c73',
+  '5': '#f6c026', '6': '#f5511d', '7': '#039be5', '8': '#616161',
+  '9': '#3f51b5', '10': '#0b8043', '11': '#d60000',
+};
+
 function getAuth() {
   const auth = new google.auth.OAuth2(creds.client_id, creds.client_secret);
   auth.setCredentials({ refresh_token: creds.refresh_token });
@@ -48,9 +54,3 @@ export default async function handler(req, res) {
     res.status(503).json({ error: 'unavailable' });
   }
 }
-
-const COLOR_MAP = {
-  '1': '#7986cb', '2': '#33b679', '3': '#8e24aa', '4': '#e67c73',
-  '5': '#f6c026', '6': '#f5511d', '7': '#039be5', '8': '#616161',
-  '9': '#3f51b5', '10': '#0b8043', '11': '#d60000',
-};
