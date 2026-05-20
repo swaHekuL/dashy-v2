@@ -4,6 +4,7 @@ import Calendar from '../screens/Calendar';
 import News from '../screens/News';
 import Steam from '../screens/Steam';
 import Weather from '../screens/Weather';
+import Gmail from '../screens/Gmail';
 
 const PANELS = ['weather', 'calendar', 'gmail', 'news', 'steam'];
 const PANEL_MS = 7000;
@@ -50,15 +51,9 @@ export default function Home() {
       <div style={{ flex: 1, overflow: 'hidden', background: '#000' }}>
         {current === 'weather'  && <Weather  data={data.weather}  />}
         {current === 'calendar' && <Calendar data={data.calendar} />}
+        {current === 'gmail'    && <Gmail    data={data.gmail}    />}
         {current === 'news'     && <News     data={data.news}     />}
         {current === 'steam'    && <Steam    data={data.steam}    />}
-        {current !== 'weather' && current !== 'calendar' && current !== 'news' && current !== 'steam' && (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#333', fontFamily: 'monospace', fontSize: '2vw', letterSpacing: '0.2em' }}>
-              {current.toUpperCase()}
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );
