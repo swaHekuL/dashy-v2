@@ -35,12 +35,14 @@ export default async function handler(req, res) {
       singleEvents: true,
       orderBy: 'startTime',
       maxResults: 3,
+      timeout: 8000,
     });
 
     cache = {
       events: (r.data.items || []).map(e => ({
+        id: e.id,
         title: e.summary || '(no title)',
-        time: e.start.dateTime
+        time: e.start?.dateTime
           ? new Date(e.start.dateTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
           : 'All day',
         color: e.colorId ? COLOR_MAP[e.colorId] : '#1a73e8',

@@ -5,7 +5,7 @@ const roboto = Roboto({ weight: ['300', '400', '500'], subsets: ['latin'] });
 export default function Calendar({ data }) {
   if (!data) return <PanelLoading label="CALENDAR" />;
 
-  const events = data?.events ?? [];
+  const events = data.events ?? [];
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   return (
@@ -20,7 +20,7 @@ export default function Calendar({ data }) {
         <div style={{ color: '#9aa0a6', fontSize: '3vw', marginTop: '2vh' }}>No events today</div>
       )}
       {events.map((ev) => (
-        <div key={ev.title + ev.time} style={{ display: 'flex', alignItems: 'center', gap: '2vw' }}>
+        <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '2vw' }}>
           <div style={{ width: '4px', height: '5vh', background: ev.color, borderRadius: '2px', flexShrink: 0 }} />
           <div>
             <div style={{ color: '#e8eaed', fontSize: '3.5vw', fontWeight: 500 }}>{ev.title}</div>
