@@ -28,15 +28,17 @@ export default async function handler(req, res) {
     const end = new Date();
     end.setHours(23, 59, 59, 999);
 
-    const r = await calendar.events.list({
-      calendarId: 'primary',
-      timeMin: start.toISOString(),
-      timeMax: end.toISOString(),
-      singleEvents: true,
-      orderBy: 'startTime',
-      maxResults: 3,
-      timeout: 8000,
-    });
+    const r = await calendar.events.list(
+      {
+        calendarId: 'primary',
+        timeMin: start.toISOString(),
+        timeMax: end.toISOString(),
+        singleEvents: true,
+        orderBy: 'startTime',
+        maxResults: 3,
+      },
+      { timeout: 8000 }
+    );
 
     cache = {
       events: (r.data.items || []).map(e => ({

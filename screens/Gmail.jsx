@@ -5,7 +5,7 @@ const roboto = Roboto({ weight: ['300', '400', '500', '700'], subsets: ['latin']
 export default function Gmail({ data }) {
   if (!data) return <PanelLoading label="GMAIL" />;
 
-  const previews = data?.previews ?? [];
+  const previews = data.previews ?? [];
   const { unreadCount } = data;
 
   return (
@@ -28,9 +28,7 @@ export default function Gmail({ data }) {
           paddingBottom: '1.2vh',
         }}>
           <div style={{ color: '#e8eaed', fontSize: '3vw', fontWeight: 600 }}>{msg.subject}</div>
-          {i === 0 && (
-            <div style={{ color: '#9aa0a6', fontSize: '2vw', marginTop: '0.3vh' }}>{msg.sender}</div>
-          )}
+          <div style={{ color: '#9aa0a6', fontSize: '2vw', marginTop: '0.3vh' }}>{msg.sender}</div>
         </div>
       ))}
     </div>

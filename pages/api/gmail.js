@@ -18,25 +18,26 @@ export default async function handler(req, res) {
   try {
     const gmail = google.gmail({ version: 'v1', auth: getAuth() });
 
-    const listRes = await gmail.users.messages.list({
-      userId: 'me',
-      labelIds: ['UNREAD', 'INBOX'],
-      maxResults: 3,
-      timeout: 8000,
-    });
+    const [listRes, labelRes] = await Promise.all([
+      gmail.users.messages.list(
+        { userId: 'me', labelIds: ['UNREAD', 'INBOX'], maxResults: 3 },
+        { timeout: 8000 }
+      ),
+      gmail.users.labels.get(
+        { userId: 'me', id: 'INBOX' },
+        { timeout: 8000 }
+      ),
+    ]);
 
-    const unreadCount = listRes.data.resultSizeEstimate || 0;
+    const unreadCount = labelRes.data.messagesUnread ?? 0;
     const messages = listRes.data.messages || [];
 
     const previews = await Promise.all(
-      messages.slice(0, 3).map(async ({ id }) => {
-        const msg = await gmail.users.messages.get({
-          userId: 'me',
-          id,
-          format: 'metadata',
-          metadataHeaders: ['Subject', 'From'],
-          timeout: 8000,
-        });
+      messages.map(async ({ id }) => {
+        const msg = await gmail.users.messages.get(
+          { userId: 'me', id, format: 'metadata', metadataHeaders: ['Subject', 'From'] },
+          { timeout: 8000 }
+        );
         const headers = msg.data.payload?.headers ?? [];
         const subject = headers.find(h => h.name === 'Subject')?.value ?? '(no subject)';
         const from = headers.find(h => h.name === 'From')?.value ?? '';
