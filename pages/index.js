@@ -26,7 +26,8 @@ export default function Home() {
     try {
       const res = await fetch(`/api/${panel}`);
       if (!res.ok) return;
-      setData(prev => ({ ...prev, [panel]: await res.json() }));
+      const json = await res.json();
+      setData(prev => ({ ...prev, [panel]: json }));
     } catch (e) {
       console.error(`[fetchPanel] ${panel}:`, e);
     }
