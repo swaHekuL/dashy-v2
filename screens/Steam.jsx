@@ -1,7 +1,7 @@
 export default function Steam({ data }) {
   if (!data) return <PanelLoading label="STEAM" />;
 
-  const deals = data?.deals ?? [];
+  const deals = data.deals ?? [];
   const { newRelease } = data;
 
   return (
