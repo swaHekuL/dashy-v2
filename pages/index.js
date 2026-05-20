@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Clock from '../screens/Clock';
+import Calendar from '../screens/Calendar';
 import News from '../screens/News';
 import Steam from '../screens/Steam';
 import Weather from '../screens/Weather';
@@ -47,10 +48,11 @@ export default function Home() {
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <Clock />
       <div style={{ flex: 1, overflow: 'hidden', background: '#000' }}>
-        {current === 'weather' && <Weather data={data.weather} />}
-        {current === 'news'    && <News    data={data.news}    />}
-        {current === 'steam'   && <Steam   data={data.steam}   />}
-        {current !== 'weather' && current !== 'news' && current !== 'steam' && (
+        {current === 'weather'  && <Weather  data={data.weather}  />}
+        {current === 'calendar' && <Calendar data={data.calendar} />}
+        {current === 'news'     && <News     data={data.news}     />}
+        {current === 'steam'    && <Steam    data={data.steam}    />}
+        {current !== 'weather' && current !== 'calendar' && current !== 'news' && current !== 'steam' && (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ color: '#333', fontFamily: 'monospace', fontSize: '2vw', letterSpacing: '0.2em' }}>
               {current.toUpperCase()}
