@@ -1,4 +1,4 @@
-const settings = require('../../config/settings.json');
+import settings from '../../config/settings.json';
 
 let cache = null;
 let cacheAt = 0;
