@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Clock from '../screens/Clock';
+import News from '../screens/News';
 
 const PANELS = ['weather', 'calendar', 'gmail', 'news', 'steam'];
 const PANEL_MS = 7000;
@@ -44,9 +45,10 @@ export default function Home() {
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <Clock />
       <div style={{ flex: 1, overflow: 'hidden', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ color: '#333', fontFamily: 'monospace', fontSize: '2vw', letterSpacing: '0.2em' }}>
-          {current.toUpperCase()}
-        </span>
+        {current === 'news'
+          ? <News data={data.news} />
+          : <span style={{ color: '#333', fontFamily: 'monospace', fontSize: '2vw', letterSpacing: '0.2em' }}>{current.toUpperCase()}</span>
+        }
       </div>
     </div>
   );
