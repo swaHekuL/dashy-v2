@@ -1,7 +1,8 @@
 export default function News({ data }) {
   if (!data) return <PanelLoading label="NEWS" />;
 
-  const { headlines } = data;
+  const headlines = data?.headlines ?? [];
+  if (!headlines.length) return <PanelLoading label="NEWS" />;
 
   return (
     <div style={{
@@ -16,7 +17,7 @@ export default function News({ data }) {
         Top Stories
       </div>
       {headlines.map((h, i) => (
-        <div key={i} style={{
+        <div key={h.title} style={{
           borderLeft: `3px solid ${i === 0 ? '#e63946' : '#333'}`,
           paddingLeft: '2vw',
         }}>
