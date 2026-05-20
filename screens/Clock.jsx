@@ -9,12 +9,15 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 function pad(n) { return String(n).padStart(2, '0'); }
 
 export default function Clock() {
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState(null);
 
   useEffect(() => {
+    setNow(new Date());
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
+
+  if (!now) return <div style={{ height: '42vh', background: '#000', flexShrink: 0 }} />;
 
   const h = now.getHours() % 12 || 12;
   const m = pad(now.getMinutes());
