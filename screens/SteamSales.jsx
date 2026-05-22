@@ -1,8 +1,7 @@
-export default function Steam({ data }) {
-  if (!data) return <PanelLoading label="STEAM" />;
+export default function SteamSales({ data }) {
+  if (!data) return <PanelLoading label="STEAM DEALS" />;
 
-  const deals = data.deals ?? [];
-  const { newRelease } = data;
+  const sales = data.sales ?? [];
 
   return (
     <div style={{
@@ -14,12 +13,12 @@ export default function Steam({ data }) {
         color: '#66c0f4', fontSize: '2vw', fontWeight: 700,
         letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '0.5vh',
       }}>
-        Featured &amp; Deals
+        Steam Deals
       </div>
-      {deals.length === 0 && (
+      {sales.length === 0 && (
         <div style={{ color: '#8f98a0', fontSize: '2.8vw' }}>No featured deals right now</div>
       )}
-      {deals.map((d) => (
+      {sales.map(d => (
         <div key={d.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '1vh' }}>
           <span style={{ color: '#c6d4df', fontSize: '3vw' }}>{d.name}</span>
           <span style={{
@@ -31,11 +30,6 @@ export default function Steam({ data }) {
           </span>
         </div>
       ))}
-      {newRelease && (
-        <div style={{ color: '#8f98a0', fontSize: '2.2vw', marginTop: '0.5vh' }}>
-          ▸ New release: {newRelease}
-        </div>
-      )}
     </div>
   );
 }

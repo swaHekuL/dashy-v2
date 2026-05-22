@@ -2,28 +2,30 @@ import { useState, useEffect } from 'react';
 import Clock from '../screens/Clock';
 import Calendar from '../screens/Calendar';
 import News from '../screens/News';
-import Steam from '../screens/Steam';
+import SteamSales from '../screens/SteamSales';
+import SteamReleases from '../screens/SteamReleases';
 import Weather from '../screens/Weather';
 import Gmail from '../screens/Gmail';
 
 const PANELS = [
   'weather', 'calendar', 'gmail',
   'news-world', 'news-gaming', 'news-tech', 'news-sports', 'news-utah',
-  'steam',
+  'steam-sales', 'steam-releases',
 ];
 
 const PANEL_MS = 10000;
 
 const REFRESH_MS = {
-  weather:        10 * 60 * 1000,
-  calendar:        5 * 60 * 1000,
-  gmail:           2 * 60 * 1000,
-  'news-world':   15 * 60 * 1000,
-  'news-gaming':  15 * 60 * 1000,
-  'news-tech':    15 * 60 * 1000,
-  'news-sports':  15 * 60 * 1000,
-  'news-utah':    15 * 60 * 1000,
-  steam:          60 * 60 * 1000,
+  weather:          10 * 60 * 1000,
+  calendar:          5 * 60 * 1000,
+  gmail:             2 * 60 * 1000,
+  'news-world':     15 * 60 * 1000,
+  'news-gaming':    15 * 60 * 1000,
+  'news-tech':      15 * 60 * 1000,
+  'news-sports':    15 * 60 * 1000,
+  'news-utah':      15 * 60 * 1000,
+  'steam-sales':    60 * 60 * 1000,
+  'steam-releases': 60 * 60 * 1000,
 };
 
 const NEWS_LABELS = {
@@ -44,12 +46,22 @@ export default function Home() {
   });
 
   const fetchPanel = async (panel) => {
-    const apiUrl = panel.startsWith('news-') ? `/api/news/${panel.slice(5)}` : `/api/${panel}`;
+    let apiUrl, dataKey;
+    if (panel.startsWith('news-')) {
+      apiUrl = `/api/news/${panel.slice(5)}`;
+      dataKey = panel;
+    } else if (panel === 'steam-sales' || panel === 'steam-releases') {
+      apiUrl = '/api/steam';
+      dataKey = 'steam';
+    } else {
+      apiUrl = `/api/${panel}`;
+      dataKey = panel;
+    }
     try {
       const res = await fetch(apiUrl);
       if (!res.ok) return;
       const json = await res.json();
-      setData(prev => ({ ...prev, [panel]: json }));
+      setData(prev => ({ ...prev, [dataKey]: json }));
     } catch (e) {
       console.error(`[fetchPanel] ${panel}:`, e);
     }
@@ -72,11 +84,12 @@ export default function Home() {
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <Clock />
       <div style={{ flex: 1, overflow: 'hidden', background: '#000' }}>
-        {current === 'weather'       && <Weather  data={data.weather}  />}
-        {current === 'calendar'      && <Calendar data={data.calendar} />}
-        {current === 'gmail'         && <Gmail    data={data.gmail}    />}
-        {current.startsWith('news-') && <News     data={data[current]} category={NEWS_LABELS[current]} />}
-        {current === 'steam'         && <Steam    data={data.steam}    />}
+        {current === 'weather'        && <Weather       data={data.weather}  />}
+        {current === 'calendar'       && <Calendar      data={data.calendar} />}
+        {current === 'gmail'          && <Gmail         data={data.gmail}    />}
+        {current.startsWith('news-')  && <News          data={data[current]} category={NEWS_LABELS[current]} />}
+        {current === 'steam-sales'    && <SteamSales    data={data.steam}    />}
+        {current === 'steam-releases' && <SteamReleases data={data.steam}    />}
       </div>
     </div>
   );
