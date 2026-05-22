@@ -23,16 +23,14 @@ export default async function handler(req, res) {
 
   try {
     const calendar = google.calendar({ version: 'v3', auth: getAuth() });
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const end = new Date();
-    end.setHours(23, 59, 59, 999);
+    const timeMin = new Date().toISOString();
+    const timeMax = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
     const r = await calendar.events.list(
       {
         calendarId: 'primary',
-        timeMin: start.toISOString(),
-        timeMax: end.toISOString(),
+        timeMin,
+        timeMax,
         singleEvents: true,
         orderBy: 'startTime',
         maxResults: 3,
@@ -41,14 +39,20 @@ export default async function handler(req, res) {
     );
 
     cache = {
-      events: (r.data.items || []).map(e => ({
-        id: e.id,
-        title: e.summary || '(no title)',
-        time: e.start?.dateTime
-          ? new Date(e.start.dateTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-          : 'All day',
-        color: e.colorId ? COLOR_MAP[e.colorId] : '#1a73e8',
-      })),
+      events: (r.data.items || []).map(e => {
+        const dateStr = e.start?.dateTime
+          ? new Date(e.start.dateTime).toISOString().slice(0, 10)
+          : e.start?.date ?? '';
+        return {
+          id: e.id,
+          title: e.summary || '(no title)',
+          date: dateStr,
+          time: e.start?.dateTime
+            ? new Date(e.start.dateTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+            : 'All day',
+          color: e.colorId ? COLOR_MAP[e.colorId] : '#1a73e8',
+        };
+      }),
     };
     cacheAt = now;
     res.json(cache);
