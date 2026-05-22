@@ -1,8 +1,8 @@
-export default function News({ data }) {
-  if (!data) return <PanelLoading label="NEWS" />;
+export default function News({ data, category = 'NEWS' }) {
+  if (!data) return <PanelLoading label={category} />;
 
   const headlines = data?.headlines ?? [];
-  if (!headlines.length) return <PanelLoading label="NEWS" />;
+  if (!headlines.length) return <PanelLoading label={category} />;
 
   return (
     <div style={{
@@ -14,7 +14,7 @@ export default function News({ data }) {
         color: '#aaa', fontSize: '2vw', letterSpacing: '0.15em',
         textTransform: 'uppercase', fontFamily: 'Arial, sans-serif', marginBottom: '0.5vh',
       }}>
-        Top Stories
+        {category}
       </div>
       {headlines.map((h, i) => (
         <div key={h.title} style={{

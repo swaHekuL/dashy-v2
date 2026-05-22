@@ -6,25 +6,47 @@ import Steam from '../screens/Steam';
 import Weather from '../screens/Weather';
 import Gmail from '../screens/Gmail';
 
-const PANELS = ['weather', 'calendar', 'gmail', 'news', 'steam'];
+const PANELS = [
+  'weather', 'calendar', 'gmail',
+  'news-world', 'news-gaming', 'news-tech', 'news-sports', 'news-utah',
+  'steam',
+];
+
 const PANEL_MS = 10000;
+
 const REFRESH_MS = {
-  weather:  10 * 60 * 1000,
-  calendar:  5 * 60 * 1000,
-  gmail:     2 * 60 * 1000,
-  news:     15 * 60 * 1000,
-  steam:    60 * 60 * 1000,
+  weather:        10 * 60 * 1000,
+  calendar:        5 * 60 * 1000,
+  gmail:           2 * 60 * 1000,
+  'news-world':   15 * 60 * 1000,
+  'news-gaming':  15 * 60 * 1000,
+  'news-tech':    15 * 60 * 1000,
+  'news-sports':  15 * 60 * 1000,
+  'news-utah':    15 * 60 * 1000,
+  steam:          60 * 60 * 1000,
+};
+
+const NEWS_LABELS = {
+  'news-world':  'World News',
+  'news-gaming': 'Gaming News',
+  'news-tech':   'Tech / AI',
+  'news-sports': 'Sports',
+  'news-utah':   'Utah News',
 };
 
 export default function Home() {
   const [panelIndex, setPanelIndex] = useState(0);
   const [data, setData] = useState({
-    weather: null, calendar: null, gmail: null, news: null, steam: null,
+    weather: null, calendar: null, gmail: null,
+    'news-world': null, 'news-gaming': null, 'news-tech': null,
+    'news-sports': null, 'news-utah': null,
+    steam: null,
   });
 
   const fetchPanel = async (panel) => {
+    const apiUrl = panel.startsWith('news-') ? `/api/news/${panel.slice(5)}` : `/api/${panel}`;
     try {
-      const res = await fetch(`/api/${panel}`);
+      const res = await fetch(apiUrl);
       if (!res.ok) return;
       const json = await res.json();
       setData(prev => ({ ...prev, [panel]: json }));
@@ -50,11 +72,11 @@ export default function Home() {
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <Clock />
       <div style={{ flex: 1, overflow: 'hidden', background: '#000' }}>
-        {current === 'weather'  && <Weather  data={data.weather}  />}
-        {current === 'calendar' && <Calendar data={data.calendar} />}
-        {current === 'gmail'    && <Gmail    data={data.gmail}    />}
-        {current === 'news'     && <News     data={data.news}     />}
-        {current === 'steam'    && <Steam    data={data.steam}    />}
+        {current === 'weather'       && <Weather  data={data.weather}  />}
+        {current === 'calendar'      && <Calendar data={data.calendar} />}
+        {current === 'gmail'         && <Gmail    data={data.gmail}    />}
+        {current.startsWith('news-') && <News     data={data[current]} category={NEWS_LABELS[current]} />}
+        {current === 'steam'         && <Steam    data={data.steam}    />}
       </div>
     </div>
   );
