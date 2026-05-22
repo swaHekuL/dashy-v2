@@ -28,13 +28,28 @@ export default async function handler(req, res) {
   const timer = setTimeout(() => ac.abort(), 8000);
 
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.lat}&longitude=${settings.lon}&current_weather=true&hourly=temperature_2m&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=1`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.lat}&longitude=${settings.lon}&current_weather=true&hourly=temperature_2m,weathercode,windspeed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=2`;
     const r = await fetch(url, { signal: ac.signal });
     clearTimeout(timer);
     if (!r.ok) throw new Error(`Open-Meteo ${r.status}`);
     const d = await r.json();
 
     const temps = d.hourly?.temperature_2m ?? [];
+    const codes = d.hourly?.weathercode ?? [];
+    const winds = d.hourly?.windspeed_10m ?? [];
+    const times = d.hourly?.time ?? [];
+
+    const curH = new Date().getHours();
+    const startH = (Math.floor(curH / 3) + 1) * 3;
+
+    const forecast = [startH, startH + 3, startH + 6, startH + 9]
+      .filter(i => i < times.length)
+      .map(i => ({
+        time: new Date(times[i]).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        temp: Math.round(temps[i]),
+        conditionCode: codes[i],
+        wind: Math.round(winds[i]),
+      }));
 
     cache = {
       temp: Math.round(d.current_weather.temperature),
@@ -42,6 +57,7 @@ export default async function handler(req, res) {
       wind: Math.round(d.current_weather.windspeed),
       high: temps.length ? Math.round(Math.max(...temps)) : null,
       low: temps.length ? Math.round(Math.min(...temps)) : null,
+      forecast,
     };
     cacheAt = now;
     res.json(cache);
