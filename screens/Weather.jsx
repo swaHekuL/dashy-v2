@@ -1,7 +1,18 @@
+const WMO_EMOJI = {
+  0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+  45: '🌫️', 48: '🌫️',
+  51: '🌦️', 53: '🌦️', 55: '🌧️',
+  61: '🌧️', 63: '🌧️', 65: '🌧️',
+  71: '🌨️', 73: '❄️', 75: '❄️', 77: '❄️',
+  80: '🌦️', 81: '🌧️', 82: '⛈️',
+  85: '🌨️', 86: '🌨️',
+  95: '⛈️', 96: '⛈️', 99: '⛈️',
+};
+
 export default function Weather({ data }) {
   if (!data) return <PanelLoading label="WEATHER" />;
 
-  const { temp, condition, high, low, wind } = data;
+  const { temp, condition, high, low, wind, forecast = [] } = data;
 
   return (
     <div style={{
@@ -13,19 +24,40 @@ export default function Weather({ data }) {
         <div style={{ color: '#fff', fontSize: '18vw', fontWeight: 200, lineHeight: 1 }}>
           {temp}°
         </div>
-        <div style={{
-          color: '#7ec8e3', fontSize: '3vw', marginTop: '1vh',
-          textTransform: 'capitalize', letterSpacing: '0.05em',
-        }}>
+        <div style={{ color: '#7ec8e3', fontSize: '3vw', marginTop: '1vh', textTransform: 'capitalize', letterSpacing: '0.05em' }}>
           {condition}
         </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5vh', marginTop: '1.5vh' }}>
+          {high !== null && <Row label="High / Low" value={`${high}° / ${low}°`} />}
+          <Row label="Wind" value={`${wind} mph`} />
+        </div>
       </div>
+
       <div style={{ width: '1px', height: '50%', background: '#222', flexShrink: 0 }} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5vh' }}>
-        {high !== null && (
-          <Row label="High / Low" value={`${high}° / ${low}°`} />
-        )}
-        <Row label="Wind" value={`${wind} mph`} />
+
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5vh' }}>
+        <div style={{ color: '#9aa0a6', fontSize: '1.8vw', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          Next 12 Hours
+        </div>
+        <div style={{ display: 'flex', gap: '1.5vw' }}>
+          {forecast.map((slot, i) => (
+            <div key={i} style={{
+              flex: 1, background: '#111', borderRadius: '8px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '1.5vh 0',
+            }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4vw' }}>
+                {WMO_EMOJI[slot.conditionCode] ?? '🌡️'}
+              </div>
+              <div style={{ width: '1px', height: '5vh', background: '#222', flexShrink: 0 }} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.3vh' }}>
+                <span style={{ color: '#fff', fontSize: '2.5vw', fontWeight: 500 }}>{slot.temp}°</span>
+                <span style={{ color: '#9aa0a6', fontSize: '1.5vw' }}>{slot.time}</span>
+                <span style={{ color: '#9aa0a6', fontSize: '1.5vw' }}>{slot.wind} mph</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
