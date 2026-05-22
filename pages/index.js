@@ -42,7 +42,7 @@ export default function Home() {
     weather: null, calendar: null, gmail: null,
     'news-world': null, 'news-gaming': null, 'news-tech': null,
     'news-sports': null, 'news-utah': null,
-    steam: null,
+    steamData: null,
   });
 
   const fetchPanel = async (panel) => {
@@ -52,7 +52,7 @@ export default function Home() {
       dataKey = panel;
     } else if (panel === 'steam-sales' || panel === 'steam-releases') {
       apiUrl = '/api/steam';
-      dataKey = 'steam';
+      dataKey = 'steamData';
     } else {
       apiUrl = `/api/${panel}`;
       dataKey = panel;
@@ -88,8 +88,8 @@ export default function Home() {
         {current === 'calendar'       && <Calendar      data={data.calendar} />}
         {current === 'gmail'          && <Gmail         data={data.gmail}    />}
         {current.startsWith('news-')  && <News          data={data[current]} category={NEWS_LABELS[current]} />}
-        {current === 'steam-sales'    && <SteamSales    data={data.steam}    />}
-        {current === 'steam-releases' && <SteamReleases data={data.steam}    />}
+        {current === 'steam-sales'    && <SteamSales    data={data.steamData}    />}
+        {current === 'steam-releases' && <SteamReleases data={data.steamData}    />}
       </div>
     </div>
   );
