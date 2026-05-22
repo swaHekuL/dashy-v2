@@ -7,7 +7,7 @@ import Weather from '../screens/Weather';
 import Gmail from '../screens/Gmail';
 
 const PANELS = ['weather', 'calendar', 'gmail', 'news', 'steam'];
-const PANEL_MS = 7000;
+const PANEL_MS = 10000;
 const REFRESH_MS = {
   weather:  10 * 60 * 1000,
   calendar:  5 * 60 * 1000,
