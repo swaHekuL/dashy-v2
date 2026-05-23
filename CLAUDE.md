@@ -11,10 +11,10 @@ Passive auto-rotating Next.js 16.2.6 (Turbopack) dashboard for Raspberry Pi 3B+ 
 
 ## Pi Deployment
 
-- SSH: `ssh -i ~/.ssh/id_ed25519_dashy swahekul@10.0.0.86`
+- SSH: `ssh -i ~/.ssh/id_ed25519_dashy swahekul@192.168.68.59`
 - Node via nvm: prefix commands with `export PATH=/home/swahekul/.nvm/versions/node/v20.20.2/bin:$PATH &&`
 - Deploy from PowerShell (single quotes prevent $PATH expansion):
-  `ssh -i ~/.ssh/id_ed25519_dashy swahekul@10.0.0.86 'export PATH=/home/swahekul/.nvm/versions/node/v20.20.2/bin:$PATH && cd ~/dashy-v2 && git pull && npm run build && pkill -f "node.*next"; npm start >> ~/dashy.log 2>&1 &'`
+  `ssh -i ~/.ssh/id_ed25519_dashy swahekul@192.168.68.59 'export PATH=/home/swahekul/.nvm/versions/node/v20.20.2/bin:$PATH && cd ~/dashy-v2 && git pull && npm run build && pkill -f "node.*next"; npm start >> ~/dashy.log 2>&1 &'`
 - Logs: `~/dashy.log` on Pi
 
 ## Gotchas
