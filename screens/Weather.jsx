@@ -35,21 +35,25 @@ export default function Weather({ data }) {
 
       <div style={{ width: '1px', height: '50%', background: '#222', flexShrink: 0 }} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5vh' }}>
+      <div style={{
+        flex: 1, alignSelf: 'stretch',
+        display: 'flex', flexDirection: 'column', gap: '1.5vh',
+        paddingTop: '2vh', paddingBottom: '2vh',
+      }}>
         <div style={{ color: '#9aa0a6', fontSize: '1.8vw', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
           Next 12 Hours
         </div>
-        <div style={{ display: 'flex', gap: '1.5vw' }}>
+        <div style={{ flex: 1, display: 'flex', gap: '1.5vw' }}>
           {forecast.map((slot, i) => (
             <div key={i} style={{
               flex: 1, background: '#111', borderRadius: '8px',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              padding: '2.5vh 0', gap: '0.4vh',
+              gap: '0.6vh',
             }}>
-              <span style={{ color: '#9aa0a6', fontSize: '1.8vw', letterSpacing: '0.03em' }}>{slot.time}</span>
-              <span style={{ color: '#fff', fontSize: '3.5vw', fontWeight: 700, lineHeight: 1.1 }}>{slot.temp}°</span>
-              <span style={{ color: '#9aa0a6', fontSize: '1.5vw' }}>{slot.wind} mph</span>
-              <span style={{ fontSize: '2.8vw', marginTop: '1vh' }}>{WMO_EMOJI[slot.conditionCode] ?? '🌡️'}</span>
+              <span style={{ color: '#9aa0a6', fontSize: '2vw', letterSpacing: '0.03em' }}>{slot.time}</span>
+              <span style={{ color: '#fff', fontSize: '4vw', fontWeight: 700, lineHeight: 1.1 }}>{slot.temp}°</span>
+              <span style={{ color: '#9aa0a6', fontSize: '1.8vw' }}>{slot.wind} mph</span>
+              <span style={{ fontSize: '3.5vw', marginTop: '1vh' }}>{WMO_EMOJI[slot.conditionCode] ?? '🌡️'}</span>
             </div>
           ))}
         </div>
