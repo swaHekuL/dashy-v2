@@ -20,7 +20,7 @@ export default function StatusBar({ currentPanel }) {
 
   return (
     <div style={{
-      height: '28px',
+      height: '36px',
       background: '#000',
       display: 'flex',
       gap: '4px',
@@ -42,26 +42,22 @@ export default function StatusBar({ currentPanel }) {
           }}>
             <span style={{
               fontFamily: 'monospace',
-              fontSize: '6px',
+              fontSize: '14px',
               fontWeight: 700,
-              letterSpacing: '0.1em',
               color: isActive ? '#000' : '#555',
-              textTransform: 'uppercase',
               lineHeight: 1,
             }}>
-              {seg}
+              {seg[0]}
             </span>
             {isActive && active.sub && (
               <span style={{
                 fontFamily: 'monospace',
-                fontSize: '5px',
-                letterSpacing: '0.08em',
+                fontSize: '8px',
                 color: '#444',
-                textTransform: 'uppercase',
-                marginTop: '1px',
+                marginTop: '2px',
                 lineHeight: 1,
               }}>
-                {active.sub}
+                {active.sub[0]}
               </span>
             )}
           </div>
