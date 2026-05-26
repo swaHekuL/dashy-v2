@@ -47,7 +47,7 @@ export default function StatusBar({ currentPanel }) {
               color: isActive ? '#000' : '#555',
               lineHeight: 1,
             }}>
-              {seg[0]}
+              {seg}
             </span>
           </div>
         );
