@@ -2,9 +2,14 @@ import { Roboto } from 'next/font/google';
 
 const roboto = Roboto({ weight: ['300', '400', '500'], subsets: ['latin'] });
 
+function localDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function dateLabel(dateStr) {
-  const today = new Date().toISOString().slice(0, 10);
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const today = localDateStr(new Date());
+  const tmrw = new Date(); tmrw.setDate(tmrw.getDate() + 1);
+  const tomorrow = localDateStr(tmrw);
   const d = new Date(dateStr + 'T12:00:00'); // noon avoids DST edge cases
   const formatted = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   if (dateStr === today) return `TODAY — ${formatted}`;

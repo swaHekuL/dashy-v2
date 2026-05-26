@@ -17,6 +17,10 @@ function getAuth() {
   return auth;
 }
 
+function toLocalDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 export default async function handler(req, res) {
   const now = Date.now();
   if (cache && now - cacheAt < TTL) return res.json(cache);
@@ -41,7 +45,7 @@ export default async function handler(req, res) {
     cache = {
       events: (r.data.items || []).map(e => {
         const dateStr = e.start?.dateTime
-          ? new Date(e.start.dateTime).toISOString().slice(0, 10)
+          ? toLocalDateStr(new Date(e.start.dateTime))
           : e.start?.date ?? '';
         return {
           id: e.id,
