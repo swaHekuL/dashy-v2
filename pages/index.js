@@ -7,12 +7,14 @@ import SteamReleases from '../screens/SteamReleases';
 import Weather from '../screens/Weather';
 import Gmail from '../screens/Gmail';
 import Stocks from '../screens/Stocks';
+import GasPrices from '../screens/GasPrices';
+import StatusBar from '../screens/StatusBar';
 
 const PANELS = [
   'weather', 'calendar', 'gmail',
   'news-world', 'news-gaming', 'news-tech', 'news-sports', 'news-utah',
   'steam-sales', 'steam-releases',
-  'stocks',
+  'stocks', 'gas',
 ];
 
 const PANEL_MS = 10000;
@@ -29,6 +31,7 @@ const REFRESH_MS = {
   'steam-sales':    60 * 60 * 1000,
   'steam-releases': 60 * 60 * 1000,
   stocks:            5 * 60 * 1000,
+  gas:               2 * 60 * 60 * 1000,
 };
 
 const NEWS_LABELS = {
@@ -47,6 +50,7 @@ export default function Home() {
     'news-sports': null, 'news-utah': null,
     steamData: null,
     stocks: null,
+    gas: null,
   });
 
   const fetchPanel = async (panel) => {
@@ -95,7 +99,9 @@ export default function Home() {
         {current === 'steam-sales'    && <SteamSales    data={data.steamData}    />}
         {current === 'steam-releases' && <SteamReleases data={data.steamData}    />}
         {current === 'stocks'         && <Stocks        data={data.stocks}   />}
+        {current === 'gas'            && <GasPrices     data={data.gas}      />}
       </div>
+      <StatusBar currentPanel={current} />
     </div>
   );
 }

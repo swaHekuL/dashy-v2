@@ -1,5 +1,11 @@
 {
   "lat": "41.324308283562615",
   "lon": "-111.84161823646542",
-  "tickers": ["AAPL", "VTI", "NVDA"]
+  "tickers": ["AAPL", "VTI", "NVDA"],
+  "gasPrices": {
+    "stations": [
+      { "label": "N OGDEN", "placeId": "PLACE_ID_HERE" },
+      { "label": "EDEN",    "placeId": "PLACE_ID_HERE" }
+    ]
+  }
 }
