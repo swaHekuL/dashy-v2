@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import creds from '../../config/credentials.json';
+import settings from '../../config/settings.json';
 
 let cache = null;
 let cacheAt = 0;
@@ -21,6 +22,35 @@ function getAuth() {
   return auth;
 }
 
+async function fetchMsEvents() {
+  try {
+    const url = settings.githubCalendarIssueUrl;
+    if (!url) return [];
+    const res = await fetch(url, { headers: { 'User-Agent': 'dashy-v2' } });
+    if (!res.ok) return [];
+    const issue = await res.json();
+    const events = JSON.parse(issue.body);
+    if (!Array.isArray(events)) return [];
+    return events.map(e => {
+      const dateStr = e.start?.dateTime
+        ? toLocalDateStr(new Date(e.start.dateTime))
+        : e.start?.date ?? '';
+      return {
+        id: `ms-${e.start?.dateTime || e.start?.date || Math.random()}`,
+        title: e.title || '(no title)',
+        date: dateStr,
+        time: e.start?.dateTime
+          ? new Date(e.start.dateTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+          : 'All day',
+        color: '#0078d4',
+        _sort: new Date(e.start?.dateTime || e.start?.date || 0).getTime(),
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 export default async function handler(req, res) {
   const now = Date.now();
   if (cache && now - cacheAt < TTL) return res.json(cache);
@@ -30,35 +60,36 @@ export default async function handler(req, res) {
     const timeMin = new Date().toISOString();
     const timeMax = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    const r = await calendar.events.list(
-      {
-        calendarId: 'primary',
-        timeMin,
-        timeMax,
-        singleEvents: true,
-        orderBy: 'startTime',
-        showHiddenInvitations: true,
-        maxResults: 3,
-      },
-      { timeout: 8000 }
-    );
+    const [googleResult, msEvents] = await Promise.all([
+      calendar.events.list(
+        { calendarId: 'primary', timeMin, timeMax, singleEvents: true, orderBy: 'startTime', showHiddenInvitations: true, maxResults: 10 },
+        { timeout: 8000 }
+      ),
+      fetchMsEvents(),
+    ]);
 
-    cache = {
-      events: (r.data.items || []).map(e => {
-        const dateStr = e.start?.dateTime
-          ? toLocalDateStr(new Date(e.start.dateTime))
-          : e.start?.date ?? '';
-        return {
-          id: e.id,
-          title: e.summary || '(no title)',
-          date: dateStr,
-          time: e.start?.dateTime
-            ? new Date(e.start.dateTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-            : 'All day',
-          color: e.colorId ? COLOR_MAP[e.colorId] : '#1a73e8',
-        };
-      }),
-    };
+    const googleEvents = (googleResult.data.items || []).map(e => {
+      const dateStr = e.start?.dateTime
+        ? toLocalDateStr(new Date(e.start.dateTime))
+        : e.start?.date ?? '';
+      return {
+        id: e.id,
+        title: e.summary || '(no title)',
+        date: dateStr,
+        time: e.start?.dateTime
+          ? new Date(e.start.dateTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+          : 'All day',
+        color: e.colorId ? COLOR_MAP[e.colorId] : '#1a73e8',
+        _sort: new Date(e.start?.dateTime || e.start?.date || 0).getTime(),
+      };
+    });
+
+    const merged = [...googleEvents, ...msEvents]
+      .sort((a, b) => a._sort - b._sort)
+      .slice(0, 3)
+      .map(({ _sort, ...e }) => e);
+
+    cache = { events: merged };
     cacheAt = now;
     res.json(cache);
   } catch (e) {
