@@ -12,8 +12,8 @@ import StatusBar from '../screens/StatusBar';
 
 const PANELS = [
   'weather', 'calendar', 'gmail',
-  'news-world', 'news-gaming', 'news-tech', 'news-sports', 'news-utah',
-  'steam-sales', 'steam-releases',
+  // 'news-world', 'news-gaming', 'news-tech', 'news-sports', 'news-utah',
+  // 'steam-sales', 'steam-releases',
   'stocks', 'gas',
 ];
 
