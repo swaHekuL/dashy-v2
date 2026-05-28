@@ -126,7 +126,7 @@ export default async function handler(req, res) {
 
     const [googleResult, msEvents] = await Promise.all([
       calendar.events.list(
-        { calendarId: 'primary', timeMin, timeMax, singleEvents: true, orderBy: 'startTime', maxResults: 10 },
+        { calendarId: 'primary', timeMin, timeMax, singleEvents: true, orderBy: 'startTime', showHiddenInvitations: true, maxResults: 10 },
         { timeout: 8000 }
       ),
       fetchMsEvents(),
