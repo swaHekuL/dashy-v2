@@ -26,7 +26,7 @@ async function fetchMsEvents() {
   try {
     const url = settings.githubCalendarIssueUrl;
     if (!url) return [];
-    const res = await fetch(url, { headers: { 'User-Agent': 'dashy-v2' } });
+    const res = await fetch(url, { headers: { 'User-Agent': 'dashy-v2' }, signal: AbortSignal.timeout(5000) });
     if (!res.ok) return [];
     const issue = await res.json();
     const events = JSON.parse(issue.body);
@@ -79,7 +79,7 @@ export default async function handler(req, res) {
         time: e.start?.dateTime
           ? new Date(e.start.dateTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
           : 'All day',
-        color: e.colorId ? COLOR_MAP[e.colorId] : '#1a73e8',
+        color: COLOR_MAP[e.colorId] ?? '#1a73e8',
         _sort: new Date(e.start?.dateTime || e.start?.date || 0).getTime(),
       };
     });
