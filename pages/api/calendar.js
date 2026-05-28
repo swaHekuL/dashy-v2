@@ -32,18 +32,18 @@ async function fetchMsEvents() {
     const events = JSON.parse(issue.body);
     if (!Array.isArray(events)) return [];
     return events.map(e => {
-      const dateStr = e.start?.dateTime
-        ? toLocalDateStr(new Date(e.start.dateTime))
-        : e.start?.date ?? '';
+      const startStr = typeof e.start === 'string' ? e.start : (e.start?.dateTime || e.start?.date || null);
+      const isDateTime = startStr && startStr.includes('T');
+      const dateStr = startStr ? toLocalDateStr(new Date(startStr)) : '';
       return {
-        id: `ms-${e.start?.dateTime || e.start?.date || Math.random()}`,
+        id: `ms-${startStr || Math.random()}`,
         title: e.subject || e.title || '(no title)',
         date: dateStr,
-        time: e.start?.dateTime
-          ? new Date(e.start.dateTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+        time: isDateTime
+          ? new Date(startStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
           : 'All day',
         color: '#0078d4',
-        _sort: new Date(e.start?.dateTime || e.start?.date || 0).getTime(),
+        _sort: startStr ? new Date(startStr).getTime() : 0,
       };
     });
   } catch {
