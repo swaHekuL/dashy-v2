@@ -11,14 +11,14 @@ const COLOR_MAP = {
   '9': '#3f51b5', '10': '#0b8043', '11': '#d60000',
 };
 
+function toLocalDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function getAuth() {
   const auth = new google.auth.OAuth2(creds.client_id, creds.client_secret);
   auth.setCredentials({ refresh_token: creds.refresh_token });
   return auth;
-}
-
-function toLocalDateStr(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
 export default async function handler(req, res) {
