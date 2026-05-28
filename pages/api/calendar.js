@@ -43,6 +43,7 @@ export default async function handler(req, res) {
       { timeout: 8000 }
     );
 
+    console.log('[calendar] raw items:', JSON.stringify((r.data.items||[]).map(e=>({date:e.start?.dateTime||e.start?.date,title:e.summary,status:e.status}))));
     cache = {
       events: (r.data.items || []).map(e => {
         const dateStr = e.start?.dateTime
