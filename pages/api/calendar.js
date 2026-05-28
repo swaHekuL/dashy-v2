@@ -37,7 +37,7 @@ async function fetchMsEvents() {
         : e.start?.date ?? '';
       return {
         id: `ms-${e.start?.dateTime || e.start?.date || Math.random()}`,
-        title: e.title || '(no title)',
+        title: e.subject || e.title || '(no title)',
         date: dateStr,
         time: e.start?.dateTime
           ? new Date(e.start.dateTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
