@@ -37,6 +37,7 @@ export default async function handler(req, res) {
         timeMax,
         singleEvents: true,
         orderBy: 'startTime',
+        showHiddenInvitations: true,
         maxResults: 3,
       },
       { timeout: 8000 }
