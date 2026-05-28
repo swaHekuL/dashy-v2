@@ -2,6 +2,7 @@
   "lat": "41.32",
   "lon": "-111.84",
   "tickers": ["AAPL", "VTI", "NVDA"],
+  "githubCalendarIssueUrl": "https://api.github.com/repos/swaHekuL/dashy-v2/issues/1",
   "gasPrices": {
     "stations": [
       { "label": "N OGDEN", "placeId": "PLACE_ID_HERE" },
