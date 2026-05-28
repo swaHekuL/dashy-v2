@@ -13,7 +13,8 @@ const SEGMENT_MAP = {
   gas:              { segment: 'GAS' },
 };
 
-const SEGMENTS = ['WEATHER', 'CALENDAR', 'GMAIL', 'NEWS', 'STEAM', 'STOCKS', 'GAS'];
+const SEGMENTS = ['WEATHER', 'CALENDAR', 'GMAIL', 'STOCKS', 'GAS'];
+// const SEGMENTS = ['WEATHER', 'CALENDAR', 'GMAIL', 'NEWS', 'STEAM', 'STOCKS', 'GAS'];
 
 export default function StatusBar({ currentPanel }) {
   const active = SEGMENT_MAP[currentPanel] ?? { segment: 'WEATHER' };
