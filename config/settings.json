@@ -5,8 +5,8 @@
   "githubCalendarIssueUrl": "https://api.github.com/repos/swaHekuL/dashy-v2/issues/1",
   "gasPrices": {
     "stations": [
-      { "label": "N OGDEN", "placeId": "PLACE_ID_HERE" },
-      { "label": "EDEN",    "placeId": "PLACE_ID_HERE" }
+      { "label": "N OGDEN", "placeId": "ChIJwTPVFI4MU4cRweScoW8OY8Q" },
+      { "label": "EDEN",    "placeId": "ChIJmwFt_OmgU4cR60u2kYQI0Hk" }
     ]
   }
 }

@@ -24,7 +24,7 @@ export default async function handler(req, res) {
 
         const body = await response.json();
         const fuelPrices = body.fuelOptions?.fuelPrices ?? [];
-        const regular = fuelPrices.find(f => f.type === 'REGULAR');
+        const regular = fuelPrices.find(f => f.type === 'REGULAR_UNLEADED');
         if (!regular) return { label, price: null, delta: null, updatedAt: null };
 
         const price = Math.round(
