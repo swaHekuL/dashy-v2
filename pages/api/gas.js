@@ -21,17 +21,12 @@ export default async function handler(req, res) {
             },
           }
         );
-        if (!response.ok) {
-          const errText = await response.text();
-          return { label, price: null, delta: null, updatedAt: null, _debug: { status: response.status, body: errText.slice(0, 200) } };
-        }
+        if (!response.ok) return { label, price: null, delta: null, updatedAt: null };
 
         const body = await response.json();
         const fuelPrices = body.fuelOptions?.fuelPrices ?? [];
         const regular = fuelPrices.find(f => f.type === 'REGULAR_UNLEADED');
-        if (!regular) {
-          return { label, price: null, delta: null, updatedAt: null, _debug: { bodyKeys: Object.keys(body), types: fuelPrices.map(f => f.type) } };
-        }
+        if (!regular) return { label, price: null, delta: null, updatedAt: null };
 
         const price = Math.round(
           (parseInt(regular.price.units, 10) + regular.price.nanos / 1e9) * 100
@@ -43,8 +38,8 @@ export default async function handler(req, res) {
         priceCache[placeId] = price;
 
         return { label, price, delta, updatedAt };
-      } catch (e) {
-        return { label, price: null, delta: null, updatedAt: null, _debug: { fetchError: e.message } };
+      } catch {
+        return { label, price: null, delta: null, updatedAt: null };
       }
     })
   );
