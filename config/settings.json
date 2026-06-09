@@ -1,7 +1,7 @@
 {
   "lat": "41.32",
   "lon": "-111.84",
-  "tickers": ["AAPL", "VTI", "NVDA"],
+  "tickers": ["AAPL", "NVDA", "GOOGL", "BTC-USD", "ETH-USD", "PACS"],
   "githubCalendarIssueUrl": "https://api.github.com/repos/swaHekuL/dashy-v2/issues/1",
   "gasPrices": {
     "stations": [
