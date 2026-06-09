@@ -34,16 +34,21 @@ async function fetchMsEvents() {
     return events.map(e => {
       const startStr = typeof e.start === 'string' ? e.start : (e.start?.dateTime || e.start?.date || null);
       const isDateTime = startStr && startStr.includes('T');
-      const dateStr = startStr ? toLocalDateStr(new Date(startStr)) : '';
+      // Power Automate sends UTC datetimes without a timezone suffix; append Z so Node.js
+      // parses them as UTC rather than local time (which would shift by the Pi's UTC offset).
+      const utcStart = (isDateTime && !/[Zz]|[+-]\d{2}:?\d{2}$/.test(startStr))
+        ? startStr + 'Z'
+        : startStr;
+      const dateStr = utcStart ? toLocalDateStr(new Date(utcStart)) : '';
       return {
-        id: `ms-${startStr || Math.random()}`,
+        id: `ms-${utcStart || Math.random()}`,
         title: e.subject || e.title || '(no title)',
         date: dateStr,
         time: isDateTime
-          ? new Date(startStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+          ? new Date(utcStart).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
           : 'All day',
         color: '#0078d4',
-        _sort: startStr ? new Date(startStr).getTime() : 0,
+        _sort: utcStart ? new Date(utcStart).getTime() : 0,
       };
     });
   } catch {
