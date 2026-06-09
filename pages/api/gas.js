@@ -1,4 +1,5 @@
 import settings from '../../config/settings.json';
+import creds from '../../config/credentials.json';
 
 // Persists between requests in the same server process.
 // Keyed by placeId, stores last known price to compute deltas.
@@ -6,7 +7,7 @@ const priceCache = {};
 
 export default async function handler(req, res) {
   const { stations } = settings.gasPrices;
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  const apiKey = creds.maps_api_key;
 
   const results = await Promise.all(
     stations.map(async ({ label, placeId }) => {
