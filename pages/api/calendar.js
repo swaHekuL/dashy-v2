@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
-import creds from '../../config/credentials.json';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import settings from '../../config/settings.json';
 
 let cache = null;
@@ -17,6 +18,7 @@ function toLocalDateStr(d) {
 }
 
 function getAuth() {
+  const creds = JSON.parse(readFileSync(join(process.cwd(), 'config/credentials.json'), 'utf8'));
   const auth = new google.auth.OAuth2(creds.client_id, creds.client_secret);
   auth.setCredentials({ refresh_token: creds.refresh_token });
   return auth;
