@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   const timer = setTimeout(() => ac.abort(), 8000);
 
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.lat}&longitude=${settings.lon}&current_weather=true&hourly=temperature_2m,weathercode,windspeed_10m,is_day&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=2`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.lat}&longitude=${settings.lon}&current_weather=true&hourly=temperature_2m,weathercode,windspeed_10m,is_day&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=2&timezone=auto`;
     const r = await fetch(url, { signal: ac.signal });
     clearTimeout(timer);
     if (!r.ok) throw new Error(`Open-Meteo ${r.status}`);
@@ -40,13 +40,15 @@ export default async function handler(req, res) {
     const times = d.hourly?.time ?? [];
     const isDayArr = d.hourly?.is_day ?? [];
 
-    const curH = new Date().getHours();
-    const startH = (Math.floor(curH / 3) + 1) * 3;
+    // Use current_weather.time (local) to find current index — avoids Pi clock/UTC mismatch
+    const curIdx = times.indexOf(d.current_weather.time);
+    const startSlot = curIdx >= 0 ? (Math.floor(curIdx / 3) + 1) * 3 : 3;
 
-    const forecast = [startH, startH + 3, startH + 6, startH + 9]
+    const forecast = [startSlot, startSlot + 3, startSlot + 6, startSlot + 9]
       .filter(i => i < times.length)
       .map(i => ({
-        time: new Date(times[i]).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        // Parse local time string directly — no Date() to avoid UTC/local conversion
+        time: (() => { const h = +times[i].slice(11, 13); const m = times[i].slice(14, 16); const ampm = h >= 12 ? 'PM' : 'AM'; return `${h % 12 || 12}:${m} ${ampm}`; })(),
         temp: Math.round(temps[i]),
         conditionCode: codes[i],
         wind: Math.round(winds[i]),
