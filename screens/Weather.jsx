@@ -1,4 +1,4 @@
-const WMO_EMOJI = {
+const WMO_EMOJI_DAY = {
   0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
   45: '🌫️', 48: '🌫️',
   51: '🌦️', 53: '🌦️', 55: '🌧️',
@@ -8,11 +8,20 @@ const WMO_EMOJI = {
   85: '🌨️', 86: '🌨️',
   95: '⛈️', 96: '⛈️', 99: '⛈️',
 };
+const WMO_EMOJI_NIGHT = {
+  ...WMO_EMOJI_DAY,
+  0: '🌙', 1: '🌙', 2: '☁️',
+};
+
+function wmoEmoji(code, isDay) {
+  const map = isDay ? WMO_EMOJI_DAY : WMO_EMOJI_NIGHT;
+  return map[code] ?? '🌡️';
+}
 
 export default function Weather({ data }) {
   if (!data) return <PanelLoading label="WEATHER" />;
 
-  const { temp, condition, high, low, wind, forecast = [] } = data;
+  const { temp, condition, high, low, wind, isDay = true, forecast = [] } = data;
 
   return (
     <div style={{
@@ -53,7 +62,7 @@ export default function Weather({ data }) {
               <span style={{ color: '#9aa0a6', fontSize: '2vw', letterSpacing: '0.03em' }}>{slot.time}</span>
               <span style={{ color: '#fff', fontSize: '4vw', fontWeight: 700, lineHeight: 1.1 }}>{slot.temp}°</span>
               <span style={{ color: '#9aa0a6', fontSize: '1.8vw' }}>{slot.wind} mph</span>
-              <span style={{ fontSize: '3.5vw', marginTop: '1vh' }}>{WMO_EMOJI[slot.conditionCode] ?? '🌡️'}</span>
+              <span style={{ fontSize: '3.5vw', marginTop: '1vh' }}>{wmoEmoji(slot.conditionCode, slot.isDay)}</span>
             </div>
           ))}
         </div>

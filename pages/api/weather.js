@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   const timer = setTimeout(() => ac.abort(), 8000);
 
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.lat}&longitude=${settings.lon}&current_weather=true&hourly=temperature_2m,weathercode,windspeed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=2`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.lat}&longitude=${settings.lon}&current_weather=true&hourly=temperature_2m,weathercode,windspeed_10m,is_day&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=2`;
     const r = await fetch(url, { signal: ac.signal });
     clearTimeout(timer);
     if (!r.ok) throw new Error(`Open-Meteo ${r.status}`);
@@ -38,6 +38,7 @@ export default async function handler(req, res) {
     const codes = d.hourly?.weathercode ?? [];
     const winds = d.hourly?.windspeed_10m ?? [];
     const times = d.hourly?.time ?? [];
+    const isDayArr = d.hourly?.is_day ?? [];
 
     const curH = new Date().getHours();
     const startH = (Math.floor(curH / 3) + 1) * 3;
@@ -49,14 +50,17 @@ export default async function handler(req, res) {
         temp: Math.round(temps[i]),
         conditionCode: codes[i],
         wind: Math.round(winds[i]),
+        isDay: isDayArr[i] === 1,
       }));
 
+    const todayTemps = temps.slice(0, 24);
     cache = {
       temp: Math.round(d.current_weather.temperature),
       condition: WMO[d.current_weather.weathercode] ?? 'Unknown',
       wind: Math.round(d.current_weather.windspeed),
-      high: temps.length ? Math.round(Math.max(...temps)) : null,
-      low: temps.length ? Math.round(Math.min(...temps)) : null,
+      isDay: d.current_weather.is_day === 1,
+      high: todayTemps.length ? Math.round(Math.max(...todayTemps)) : null,
+      low: todayTemps.length ? Math.round(Math.min(...todayTemps)) : null,
       forecast,
     };
     cacheAt = now;
