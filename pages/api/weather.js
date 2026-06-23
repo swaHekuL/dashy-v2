@@ -42,6 +42,7 @@ export default async function handler(req, res) {
 
     // Use current_weather.time (local) to find current index — avoids Pi clock/UTC mismatch
     const curIdx = times.indexOf(d.current_weather.time);
+    console.log('[weather] current_weather.time:', d.current_weather.time, '| times[0]:', times[0], '| curIdx:', curIdx);
     const startSlot = curIdx >= 0 ? (Math.floor(curIdx / 3) + 1) * 3 : 3;
 
     const forecast = [startSlot, startSlot + 3, startSlot + 6, startSlot + 9]
