@@ -94,15 +94,19 @@ export default async function handler(req, res) {
         })),
         asOf: new Date().toISOString(),
       };
-      cache = payload;
-      cacheAt = now;
+      // Do NOT cache the no-baseline response — next request after baseline
+      // is established should immediately compute real P&L without waiting 1h.
       return res.json(payload);
     }
 
     // Subsequent fetches — compute P&L vs baseline
     const payload = {
       accounts: accounts.map(a => {
-        const base = baseline.accounts[a.id] ?? a.totalValue;
+        const base = baseline.accounts[a.id];
+        // Account not present in baseline (appeared mid-day) — no data yet
+        if (base === undefined) {
+          return { id: a.id, name: a.name, totalValue: a.totalValue, dailyChange: null, dailyChangePct: null, hasBaseline: false };
+        }
         const dailyChange = a.totalValue - base;
         const dailyChangePct = base !== 0 ? (dailyChange / base) * 100 : 0;
         return {
