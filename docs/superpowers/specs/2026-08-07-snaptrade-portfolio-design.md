@@ -9,32 +9,28 @@ Add a Portfolio panel to Dashy that displays each Fidelity account as a distinct
 
 ## Setup (One-Time, Pre-Deploy)
 
+Credentials live **only on the Pi** — nothing is stored locally. The setup script reads from the Pi via SSH, calls SnapTrade in-memory, and writes results back to the Pi.
+
 ### Phase 1 — SnapTrade Developer Registration (manual, ~5 min)
 1. Register at snaptrade.com → get `clientId` and `consumerKey` from the developer dashboard
-2. Add to local `.env.local`:
-   ```
-   SNAPTRADE_CLIENT_ID=...
-   SNAPTRADE_CONSUMER_KEY=...
+2. SSH them directly onto the Pi:
+   ```powershell
+   ssh -i ~/.ssh/id_ed25519_dashy swahekul@192.168.68.62 'echo "SNAPTRADE_CLIENT_ID=..." >> ~/dashy-v2/.env.local && echo "SNAPTRADE_CONSUMER_KEY=..." >> ~/dashy-v2/.env.local'
    ```
 
 ### Phase 2 — Run Setup Script
 ```
 node scripts/setup-snaptrade.mjs
 ```
-The script:
-1. Reads `SNAPTRADE_CLIENT_ID` and `SNAPTRADE_CONSUMER_KEY` from `.env.local`
-2. Registers a SnapTrade user with `userId = "dashy"`
-3. Prints the returned `userSecret` → user pastes it into `.env.local`
-4. Prints an OAuth redirect URL → user opens in browser, logs into Fidelity, connects all accounts
-5. Done — the API route auto-discovers all connected accounts on first fetch
+The script (no local `.env.local` required):
+1. SSHs into the Pi and reads `~/dashy-v2/.env.local` via `cat`
+2. Parses `SNAPTRADE_CLIENT_ID` and `SNAPTRADE_CONSUMER_KEY` — held in memory only, never written locally
+3. Calls SnapTrade API to register user `"dashy"` → receives `userSecret`
+4. SSHs back to Pi to append `SNAPTRADE_USER_ID=dashy` and `SNAPTRADE_USER_SECRET=...` to `~/dashy-v2/.env.local`
+5. Prints the OAuth redirect URL → user opens in browser, logs into Fidelity, connects all accounts
+6. Done — the API route auto-discovers all connected accounts on first fetch
 
-### Phase 3 — Sync to Pi
-Append to Pi's `.env.local` via SSH:
-```powershell
-ssh -i ~/.ssh/id_ed25519_dashy swahekul@192.168.68.62 'echo "SNAPTRADE_USER_ID=dashy" >> ~/dashy-v2/.env.local && echo "SNAPTRADE_USER_SECRET=..." >> ~/dashy-v2/.env.local'
-```
-
-### Final `.env.local` additions
+### Pi `.env.local` after setup (nothing stored locally)
 ```
 SNAPTRADE_CLIENT_ID=...
 SNAPTRADE_CONSUMER_KEY=...
