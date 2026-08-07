@@ -119,6 +119,7 @@ export default function Home() {
         setPanelIndex(i => (i - 1 + PANELS.length) % PANELS.length);
         resetInactivityTimer();
       } else if (e.key === CAMERA_KEY) {
+        e.preventDefault();
         if (showCamera) {
           setShowCamera(false);
           startRotation();
@@ -135,7 +136,7 @@ export default function Home() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <Clock />
+      {!showCamera && <Clock />}
       <div style={{ flex: 1, overflow: 'hidden', background: '#000' }}>
         {showCamera ? (
           <Camera />
