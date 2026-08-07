@@ -20,7 +20,7 @@ const PANELS = [
 
 const PANEL_MS = 10000;
 const INACTIVITY_MS = 30000;
-const CAMERA_KEY = 'CAMERA_KEY_PLACEHOLDER';
+const CAMERA_KEY = 'Escape';
 
 const REFRESH_MS = {
   weather:          10 * 60 * 1000,
