@@ -8,7 +8,7 @@ export default function handler(req, res) {
     return;
   }
 
-  res.setHeader('Content-Type', 'multipart/x-mixed-replace; boundary=mjpeg');
+  res.setHeader('Content-Type', 'multipart/x-mixed-replace; boundary=ffmpeg');
   res.setHeader('Cache-Control', 'no-cache, no-store');
   res.setHeader('Connection', 'close');
 
