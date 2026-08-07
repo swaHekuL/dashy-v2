@@ -14,7 +14,7 @@ const SEGMENT_MAP = {
   camera:           { segment: 'CAMERA' },
 };
 
-const SEGMENTS = ['WEATHER', 'CALENDAR', 'GMAIL', 'STOCKS', 'PORTFOLIO', 'CAMERA'];
+const SEGMENTS = ['WEATHER', 'CALENDAR', 'GMAIL', 'PORTFOLIO', 'CAMERA'];
 // const SEGMENTS = ['WEATHER', 'CALENDAR', 'GMAIL', 'NEWS', 'STEAM', 'STOCKS', 'GAS', 'CAMERA'];
 
 export default function StatusBar({ currentPanel }) {

@@ -15,7 +15,8 @@ const PANELS = [
   'weather', 'calendar', 'gmail',
   // 'news-world', 'news-gaming', 'news-tech', 'news-sports', 'news-utah',
   // 'steam-sales', 'steam-releases',
-  'stocks', 'portfolio',
+  // 'stocks',
+  'portfolio',
 ];
 
 const PANEL_MS = 10000;
