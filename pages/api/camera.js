@@ -25,5 +25,5 @@ export default function handler(req, res) {
 
   ffmpeg.stdout.pipe(res);
   req.socket.on('close', () => ffmpeg.kill('SIGTERM'));
-  ffmpeg.on('exit', () => res.end());
+  ffmpeg.on('error', () => res.end());
 }
