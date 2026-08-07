@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Clock from '../screens/Clock';
 import Calendar from '../screens/Calendar';
 import News from '../screens/News';
@@ -18,6 +18,7 @@ const PANELS = [
 ];
 
 const PANEL_MS = 10000;
+const INACTIVITY_MS = 30000;
 
 const REFRESH_MS = {
   weather:          10 * 60 * 1000,
@@ -48,10 +49,10 @@ export default function Home() {
     weather: null, calendar: null, gmail: null,
     'news-world': null, 'news-gaming': null, 'news-tech': null,
     'news-sports': null, 'news-utah': null,
-    steamData: null,
-    stocks: null,
-    gas: null,
+    steamData: null, stocks: null, gas: null,
   });
+  const rotationRef = useRef(null);
+  const resumeTimerRef = useRef(null);
 
   const fetchPanel = async (panel) => {
     let apiUrl, dataKey;
@@ -81,10 +82,42 @@ export default function Home() {
     return () => intervals.forEach(clearInterval);
   }, []);
 
-  useEffect(() => {
-    const id = setInterval(() => setPanelIndex(i => (i + 1) % PANELS.length), PANEL_MS);
-    return () => clearInterval(id);
+  const startRotation = useCallback(() => {
+    clearInterval(rotationRef.current);
+    rotationRef.current = setInterval(
+      () => setPanelIndex(i => (i + 1) % PANELS.length),
+      PANEL_MS
+    );
   }, []);
+
+  const resetInactivityTimer = useCallback(() => {
+    clearInterval(rotationRef.current);
+    rotationRef.current = null;
+    clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(startRotation, INACTIVITY_MS);
+  }, [startRotation]);
+
+  useEffect(() => {
+    startRotation();
+    return () => {
+      clearInterval(rotationRef.current);
+      clearTimeout(resumeTimerRef.current);
+    };
+  }, [startRotation]);
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        setPanelIndex(i => (i + 1) % PANELS.length);
+        resetInactivityTimer();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        setPanelIndex(i => (i - 1 + PANELS.length) % PANELS.length);
+        resetInactivityTimer();
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [resetInactivityTimer]);
 
   const current = PANELS[panelIndex];
 
@@ -96,8 +129,8 @@ export default function Home() {
         {current === 'calendar'       && <Calendar      data={data.calendar} />}
         {current === 'gmail'          && <Gmail         data={data.gmail}    />}
         {current.startsWith('news-')  && <News          data={data[current]} category={NEWS_LABELS[current]} />}
-        {current === 'steam-sales'    && <SteamSales    data={data.steamData}    />}
-        {current === 'steam-releases' && <SteamReleases data={data.steamData}    />}
+        {current === 'steam-sales'    && <SteamSales    data={data.steamData} />}
+        {current === 'steam-releases' && <SteamReleases data={data.steamData} />}
         {current === 'stocks'         && <Stocks        data={data.stocks}   />}
         {current === 'gas'            && <GasPrices     data={data.gas}      />}
       </div>
