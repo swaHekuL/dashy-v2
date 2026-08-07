@@ -8,6 +8,7 @@ import Weather from '../screens/Weather';
 import Gmail from '../screens/Gmail';
 import Stocks from '../screens/Stocks';
 import GasPrices from '../screens/GasPrices';
+import Camera from '../screens/Camera';
 import StatusBar from '../screens/StatusBar';
 
 const PANELS = [
@@ -19,6 +20,7 @@ const PANELS = [
 
 const PANEL_MS = 10000;
 const INACTIVITY_MS = 30000;
+const CAMERA_KEY = 'CAMERA_KEY_PLACEHOLDER';
 
 const REFRESH_MS = {
   weather:          10 * 60 * 1000,
@@ -45,6 +47,7 @@ const NEWS_LABELS = {
 
 export default function Home() {
   const [panelIndex, setPanelIndex] = useState(0);
+  const [showCamera, setShowCamera] = useState(false);
   const [data, setData] = useState({
     weather: null, calendar: null, gmail: null,
     'news-world': null, 'news-gaming': null, 'news-tech': null,
@@ -108,16 +111,25 @@ export default function Home() {
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        setShowCamera(false);
         setPanelIndex(i => (i + 1) % PANELS.length);
         resetInactivityTimer();
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        setShowCamera(false);
         setPanelIndex(i => (i - 1 + PANELS.length) % PANELS.length);
         resetInactivityTimer();
+      } else if (e.key === CAMERA_KEY) {
+        if (showCamera) {
+          setShowCamera(false);
+          startRotation();
+        } else {
+          setShowCamera(true);
+        }
       }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [resetInactivityTimer]);
+  }, [resetInactivityTimer, startRotation, showCamera]);
 
   const current = PANELS[panelIndex];
 
@@ -125,16 +137,22 @@ export default function Home() {
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <Clock />
       <div style={{ flex: 1, overflow: 'hidden', background: '#000' }}>
-        {current === 'weather'        && <Weather       data={data.weather}  />}
-        {current === 'calendar'       && <Calendar      data={data.calendar} />}
-        {current === 'gmail'          && <Gmail         data={data.gmail}    />}
-        {current.startsWith('news-')  && <News          data={data[current]} category={NEWS_LABELS[current]} />}
-        {current === 'steam-sales'    && <SteamSales    data={data.steamData} />}
-        {current === 'steam-releases' && <SteamReleases data={data.steamData} />}
-        {current === 'stocks'         && <Stocks        data={data.stocks}   />}
-        {current === 'gas'            && <GasPrices     data={data.gas}      />}
+        {showCamera ? (
+          <Camera />
+        ) : (
+          <>
+            {current === 'weather'        && <Weather       data={data.weather}  />}
+            {current === 'calendar'       && <Calendar      data={data.calendar} />}
+            {current === 'gmail'          && <Gmail         data={data.gmail}    />}
+            {current.startsWith('news-')  && <News          data={data[current]} category={NEWS_LABELS[current]} />}
+            {current === 'steam-sales'    && <SteamSales    data={data.steamData} />}
+            {current === 'steam-releases' && <SteamReleases data={data.steamData} />}
+            {current === 'stocks'         && <Stocks        data={data.stocks}   />}
+            {current === 'gas'            && <GasPrices     data={data.gas}      />}
+          </>
+        )}
       </div>
-      <StatusBar currentPanel={current} />
+      <StatusBar currentPanel={showCamera ? 'camera' : current} />
     </div>
   );
 }
