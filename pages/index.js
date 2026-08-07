@@ -7,7 +7,7 @@ import SteamReleases from '../screens/SteamReleases';
 import Weather from '../screens/Weather';
 import Gmail from '../screens/Gmail';
 import Stocks from '../screens/Stocks';
-import GasPrices from '../screens/GasPrices';
+import Portfolio from '../screens/Portfolio';
 import Camera from '../screens/Camera';
 import StatusBar from '../screens/StatusBar';
 
@@ -15,7 +15,7 @@ const PANELS = [
   'weather', 'calendar', 'gmail',
   // 'news-world', 'news-gaming', 'news-tech', 'news-sports', 'news-utah',
   // 'steam-sales', 'steam-releases',
-  'stocks', 'gas',
+  'stocks', 'portfolio',
 ];
 
 const PANEL_MS = 10000;
@@ -34,7 +34,7 @@ const REFRESH_MS = {
   'steam-sales':    60 * 60 * 1000,
   'steam-releases': 60 * 60 * 1000,
   stocks:            5 * 60 * 1000,
-  gas:               2 * 60 * 60 * 1000,
+  portfolio:         60 * 60 * 1000,
 };
 
 const NEWS_LABELS = {
@@ -52,7 +52,7 @@ export default function Home() {
     weather: null, calendar: null, gmail: null,
     'news-world': null, 'news-gaming': null, 'news-tech': null,
     'news-sports': null, 'news-utah': null,
-    steamData: null, stocks: null, gas: null,
+    steamData: null, stocks: null, portfolio: null,
   });
   const rotationRef = useRef(null);
   const resumeTimerRef = useRef(null);
@@ -149,7 +149,7 @@ export default function Home() {
             {current === 'steam-sales'    && <SteamSales    data={data.steamData} />}
             {current === 'steam-releases' && <SteamReleases data={data.steamData} />}
             {current === 'stocks'         && <Stocks        data={data.stocks}   />}
-            {current === 'gas'            && <GasPrices     data={data.gas}      />}
+            {current === 'portfolio'      && <Portfolio     data={data.portfolio} />}
           </>
         )}
       </div>
