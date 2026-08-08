@@ -12,11 +12,12 @@ export default function handler(req, res) {
   res.setHeader('Cache-Control', 'no-cache, no-store');
   res.setHeader('Connection', 'close');
 
-  const rtspUrl = `rtsp://${CAMERA_USER}:${CAMERA_PASS}@${CAMERA_IP}/stream2`;
+  const rtspUrl = `rtsp://${CAMERA_USER}:${CAMERA_PASS}@${CAMERA_IP}/stream1`;
 
   const ffmpeg = spawn('ffmpeg', [
-    '-c:v', 'h264_v4l2m2m',
+    '-rtsp_transport', 'tcp',
     '-i', rtspUrl,
+    '-vf', 'scale=800:-2',
     '-f', 'mpjpeg',
     '-q:v', '5',
     '-r', '10',
