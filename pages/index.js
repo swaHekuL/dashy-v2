@@ -19,6 +19,8 @@ const PANELS = [
   'portfolio',
 ];
 
+const CAMERAS = ['tapo', 'ring'];
+
 const PANEL_MS = 10000;
 const INACTIVITY_MS = 30000;
 const CAMERA_KEY = 'Escape';
@@ -49,6 +51,7 @@ const NEWS_LABELS = {
 export default function Home() {
   const [panelIndex, setPanelIndex] = useState(0);
   const [showCamera, setShowCamera] = useState(false);
+  const [camIndex, setCamIndex] = useState(0);
   const [data, setData] = useState({
     weather: null, calendar: null, gmail: null,
     'news-world': null, 'news-gaming': null, 'news-tech': null,
@@ -111,22 +114,30 @@ export default function Home() {
 
   useEffect(() => {
     const handleKey = (e) => {
-      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
-        setShowCamera(false);
-        setPanelIndex(i => (i + 1) % PANELS.length);
-        resetInactivityTimer();
-      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-        setShowCamera(false);
-        setPanelIndex(i => (i - 1 + PANELS.length) % PANELS.length);
-        resetInactivityTimer();
-      } else if (e.key === CAMERA_KEY) {
+      if (e.key === CAMERA_KEY) {
         e.preventDefault();
         if (showCamera) {
           setShowCamera(false);
+          setCamIndex(0);
           startRotation();
         } else {
           setShowCamera(true);
         }
+        return;
+      }
+
+      const isRight = e.key === 'ArrowRight' || e.key === 'PageDown';
+      const isLeft  = e.key === 'ArrowLeft'  || e.key === 'PageUp';
+      if (!isRight && !isLeft) return;
+
+      if (showCamera) {
+        if (isRight) setCamIndex(i => (i + 1) % CAMERAS.length);
+        if (isLeft)  setCamIndex(i => (i - 1 + CAMERAS.length) % CAMERAS.length);
+      } else {
+        if (isRight) setPanelIndex(i => (i + 1) % PANELS.length);
+        if (isLeft)  setPanelIndex(i => (i - 1 + PANELS.length) % PANELS.length);
+        setShowCamera(false);
+        resetInactivityTimer();
       }
     };
     window.addEventListener('keydown', handleKey);
@@ -140,7 +151,7 @@ export default function Home() {
       {!showCamera && <Clock />}
       <div style={{ flex: 1, overflow: 'hidden', background: '#000' }}>
         {showCamera ? (
-          <Camera />
+          <Camera activeCam={CAMERAS[camIndex]} />
         ) : (
           <>
             {current === 'weather'        && <Weather       data={data.weather}  />}
