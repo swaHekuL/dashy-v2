@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
   try {
     const cameras = await getApi().getCameras();
-    if (!cameras.length) return res.status(503).end('No Ring cameras found');
+    if (!cameras.length) { ringApi = null; return res.status(503).end('No Ring cameras found'); }
 
     const snapshot = await cameras[0].getSnapshot();
     res.setHeader('Content-Type', 'image/jpeg');
