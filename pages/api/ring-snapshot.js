@@ -6,7 +6,9 @@ function getApi() {
   if (!ringApi) {
     ringApi = new RingApi({
       refreshToken: process.env.RING_REFRESH_TOKEN,
-      onRefreshTokenUpdated: () => {},
+      onRefreshTokenUpdated: () => {
+        console.log('[ring-snapshot] refresh token rotated — re-run scripts/get-ring-token.mjs to persist the new token');
+      },
     });
   }
   return ringApi;
