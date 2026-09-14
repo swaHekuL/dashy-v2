@@ -13,7 +13,7 @@ const renderCard = (t, key) => (
   }}>
     <div style={{
       width: '5px', flexShrink: 0,
-      background: t.marketOpen ? (t.up ? '#4caf50' : '#f44336') : '#444',
+      background: t.marketOpen ? (t.flat ? '#888' : t.up ? '#4caf50' : '#f44336') : '#444',
     }} />
     <div style={{
       flex: 1, padding: '0 2vw',
@@ -26,7 +26,7 @@ const renderCard = (t, key) => (
         <div style={{ color: '#fff', fontSize: '2.5vw', fontWeight: 500 }}>${t.price}</div>
         <div style={{
           fontSize: '1.8vw', fontWeight: 500,
-          color: t.marketOpen ? (t.up ? '#4caf50' : '#f44336') : '#9aa0a6',
+          color: t.marketOpen ? (t.flat ? '#9aa0a6' : t.up ? '#4caf50' : '#f44336') : '#9aa0a6',
         }}>
           {t.change} · {t.changePct}{!t.marketOpen ? ' (closed)' : ''}
         </div>

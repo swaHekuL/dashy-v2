@@ -41,7 +41,8 @@ export default async function handler(req, res) {
           price: price.toFixed(2),
           change: (change >= 0 ? '+' : '') + change.toFixed(2),
           changePct: (change >= 0 ? '+' : '') + changePct.toFixed(2) + '%',
-          up: change >= 0,
+          up: change > 0,
+          flat: change === 0,
           marketOpen,
         };
       })

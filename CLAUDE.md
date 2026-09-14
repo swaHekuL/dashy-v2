@@ -23,10 +23,10 @@ A **StatusBar** at the bottom highlights which segment (WEATHER / CALENDAR / GMA
 
 ## Pi Deployment
 
-- SSH: `ssh -i ~/.ssh/id_ed25519_dashy swahekul@192.168.68.59`
+- SSH: `ssh -i ~/.ssh/id_ed25519_dashy swahekul@192.168.68.62` (IP may change — check router DHCP list if unreachable; set static reservation to lock it down)
 - Node via nvm: prefix commands with `export PATH=/home/swahekul/.nvm/versions/node/v20.20.2/bin:$PATH &&`
 - Deploy from PowerShell (single quotes prevent $PATH expansion):
-  `ssh -i ~/.ssh/id_ed25519_dashy swahekul@192.168.68.59 'export PATH=/home/swahekul/.nvm/versions/node/v20.20.2/bin:$PATH && cd ~/dashy-v2 && git pull && npm run build && pkill -f "node.*next"; npm start >> ~/dashy.log 2>&1 &'`
+  `ssh -i ~/.ssh/id_ed25519_dashy swahekul@192.168.68.62 'export PATH=/home/swahekul/.nvm/versions/node/v20.20.2/bin:$PATH && cd ~/dashy-v2 && git pull && npm run build && pkill -f "node.*next"; npm start >> ~/dashy.log 2>&1 &'`
 - Logs: `~/dashy.log` on Pi
 
 ## Gotchas

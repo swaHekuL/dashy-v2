@@ -13,8 +13,9 @@ function fmt(n) {
 function AccountCard({ account }) {
   const { name, totalValue, dailyChange, dailyChangePct, hasBaseline } = account;
   const up = hasBaseline && dailyChange > 0;
-  const accentColor = !hasBaseline ? '#444' : up ? '#4caf50' : '#f44336';
-  const pnlColor = !hasBaseline ? '#9aa0a6' : up ? '#4caf50' : '#f44336';
+  const flat = hasBaseline && dailyChange === 0;
+  const accentColor = !hasBaseline ? '#444' : flat ? '#888' : up ? '#4caf50' : '#f44336';
+  const pnlColor = !hasBaseline ? '#9aa0a6' : flat ? '#9aa0a6' : up ? '#4caf50' : '#f44336';
 
   const pnlText = !hasBaseline
     ? '—'
