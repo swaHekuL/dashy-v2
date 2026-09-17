@@ -8,7 +8,7 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 
 function pad(n) { return String(n).padStart(2, '0'); }
 
-export default function Clock() {
+export default function Clock({ notifications = [] }) {
   const [now, setNow] = useState(null);
 
   useEffect(() => {
@@ -37,7 +37,34 @@ export default function Clock() {
       justifyContent: 'center',
       borderBottom: '1px solid #1a1a1a',
       flexShrink: 0,
+      position: 'relative',
     }}>
+      {notifications.length > 0 && (
+        <div style={{
+          position: 'absolute',
+          top: '10px',
+          left: '10px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px',
+        }}>
+          {notifications.map(n => (
+            <div key={n.session_id} style={{
+              fontFamily: 'monospace',
+              fontSize: '11px',
+              fontWeight: 400,
+              letterSpacing: '0.02em',
+              color: '#0f0',
+              background: '#111',
+              border: '1px solid #333',
+              borderRadius: '3px',
+              padding: '3px 6px',
+            }}>
+              {n.machine} · {n.project}
+            </div>
+          ))}
+        </div>
+      )}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5vw' }}>
         <span style={{ fontSize: '18vw', color: '#fff', lineHeight: 1, letterSpacing: '0.04em' }}>
           {h}:{m}:{s}

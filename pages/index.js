@@ -58,6 +58,7 @@ export default function Home() {
     'news-sports': null, 'news-utah': null,
     steamData: null, stocks: null, portfolio: null,
   });
+  const [notifications, setNotifications] = useState([]);
   const rotationRef = useRef(null);
   const resumeTimerRef = useRef(null);
 
@@ -87,6 +88,22 @@ export default function Home() {
     PANELS.forEach(p => fetchPanel(p));
     const intervals = PANELS.map(p => setInterval(() => fetchPanel(p), REFRESH_MS[p]));
     return () => intervals.forEach(clearInterval);
+  }, []);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch('/api/claude-notify');
+        if (!res.ok) return;
+        const json = await res.json();
+        setNotifications(json.waiting ?? []);
+      } catch (e) {
+        console.error('[fetchNotifications]', e);
+      }
+    };
+    fetchNotifications();
+    const id = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(id);
   }, []);
 
   const startRotation = useCallback(() => {
@@ -148,7 +165,7 @@ export default function Home() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      {!showCamera && <Clock />}
+      {!showCamera && <Clock notifications={notifications} />}
       <div style={{ flex: 1, overflow: 'hidden', background: '#000' }}>
         {showCamera ? (
           <Camera activeCam={CAMERAS[camIndex]} />
