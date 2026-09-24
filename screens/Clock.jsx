@@ -42,23 +42,23 @@ export default function Clock({ notifications = [] }) {
       {notifications.length > 0 && (
         <div style={{
           position: 'absolute',
-          top: '10px',
-          left: '10px',
+          top: '20px',
+          left: '20px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '4px',
+          gap: '8px',
         }}>
           {notifications.map(n => (
             <div key={n.session_id} style={{
               fontFamily: 'monospace',
-              fontSize: '11px',
-              fontWeight: 400,
+              fontSize: '22px',
+              fontWeight: 700,
               letterSpacing: '0.02em',
               color: '#0f0',
               background: '#111',
-              border: '1px solid #333',
-              borderRadius: '3px',
-              padding: '3px 6px',
+              border: '2px solid #333',
+              borderRadius: '5px',
+              padding: '6px 12px',
             }}>
               {n.machine} · {n.project}
             </div>
