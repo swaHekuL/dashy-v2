@@ -29,6 +29,13 @@ A **StatusBar** at the bottom highlights which segment (WEATHER / CALENDAR / GMA
   `ssh -i ~/.ssh/id_ed25519_dashy swahekul@192.168.68.62 'export PATH=/home/swahekul/.nvm/versions/node/v20.20.2/bin:$PATH && cd ~/dashy-v2 && git pull && npm run build && pkill -f "node.*next"; npm start >> ~/dashy.log 2>&1 &'`
 - Logs: `~/dashy.log` on Pi
 
+### Claude Notify Hook
+
+- Public endpoint: `https://dashy.lukehaws.com/api/claude-notify` (Cloudflare Tunnel `dashy-notify`, config at `/etc/cloudflared/config.yml` on the Pi, routes only this one path — everything else on that hostname 404s)
+- Tunnel runs as a systemd service: `cloudflared` (check with `systemctl status cloudflared` on the Pi)
+- `CLAUDE_NOTIFY_TOKEN` in the Pi's `.env.local` is the shared secret the hook script authenticates with — regenerate with `openssl rand -hex 32` if it ever leaks, and update it on every hook-side machine (see `docs/claude-notify-hook-agent-brief.md`)
+- Pi is 64-bit (`aarch64`/Debian 13), so `cloudflared` was installed from the `cloudflared-linux-arm64` release asset, not `-arm`
+
 ## Gotchas
 
 - **SSR hydration**: Never `useState(new Date())` — use `useState(null)` + useEffect to set client-side
