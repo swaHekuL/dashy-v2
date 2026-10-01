@@ -1,6 +1,7 @@
 import { google } from 'googleapis';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { fetchIcsEvents } from '../../lib/ics';
 
 let cache = null;
 let cacheAt = 0;
@@ -14,6 +15,16 @@ const COLOR_MAP = {
 
 function toLocalDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+const OUTLOOK_COLOR = '#cc0000';
+
+function icsFeeds() {
+  const split = v => (v || '').split(',').map(s => s.trim()).filter(Boolean);
+  return [
+    ...split(process.env.OUTLOOK_ICS_URLS).map(url => ({ url, busyOnly: false })),
+    ...split(process.env.OUTLOOK_ICS_BUSY_URLS).map(url => ({ url, busyOnly: true })),
+  ];
 }
 
 function getAuth() {
@@ -32,12 +43,24 @@ export default async function handler(req, res) {
     const timeMin = new Date().toISOString();
     const timeMax = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    const googleResult = await calendar.events.list(
-      { calendarId: 'primary', timeMin, timeMax, singleEvents: true, orderBy: 'startTime', showHiddenInvitations: true, maxResults: 10 },
-      { timeout: 8000 }
-    );
+    const from = new Date(timeMin);
+    const to = new Date(timeMax);
 
-    const events = (googleResult.data.items || []).map(e => {
+    const [googleSettled, ...icsSettled] = await Promise.allSettled([
+      calendar.events.list(
+        { calendarId: 'primary', timeMin, timeMax, singleEvents: true, orderBy: 'startTime', showHiddenInvitations: true, maxResults: 10 },
+        { timeout: 8000 }
+      ),
+      ...icsFeeds().map((f, i) =>
+        fetchIcsEvents(f.url, { from, to, color: OUTLOOK_COLOR, busyOnly: f.busyOnly, idPrefix: `ics${i}` })
+      ),
+    ]);
+
+    // Google is the primary source; ICS feeds are best-effort.
+    if (googleSettled.status === 'rejected') throw googleSettled.reason;
+    icsSettled.filter(r => r.status === 'rejected').forEach(r => console.error('[calendar:ics]', r.reason?.message));
+
+    const googleEvents = (googleSettled.value.data.items || []).map(e => {
       const dateStr = e.start?.dateTime
         ? toLocalDateStr(new Date(e.start.dateTime))
         : e.start?.date ?? '';
@@ -52,6 +75,8 @@ export default async function handler(req, res) {
         _sort: new Date(e.start?.dateTime || e.start?.date || 0).getTime(),
       };
     });
+
+    const events = [...googleEvents, ...icsSettled.flatMap(r => r.status === 'fulfilled' ? r.value : [])];
 
     const merged = events
       .sort((a, b) => a._sort - b._sort)

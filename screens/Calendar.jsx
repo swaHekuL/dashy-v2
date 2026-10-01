@@ -46,7 +46,7 @@ export default function Calendar({ data }) {
             {dateLabel(date)}
           </div>
           {evs.map(ev => (
-            <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '2vw' }}>
+            <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '2vw', opacity: ev.dim ? 0.5 : 1 }}>
               <div style={{ width: '4px', height: '5vh', background: ev.color, borderRadius: '2px', flexShrink: 0 }} />
               <div>
                 <div style={{ color: '#e8eaed', fontSize: '3.5vw', fontWeight: 500 }}>{ev.title}</div>
