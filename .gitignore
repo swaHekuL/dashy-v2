@@ -42,6 +42,9 @@ next-env.d.ts
 
 config/credentials.json
 
+# runtime state (minecraft panel player history)
+/data/
+
 FUTURE.md
 
 # visual brainstorming sessions
