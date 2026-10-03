@@ -7,5 +7,11 @@
       { "label": "N OGDEN", "placeId": "ChIJwTPVFI4MU4cRweScoW8OY8Q" },
       { "label": "EDEN",    "placeId": "ChIJmwFt_OmgU4cR60u2kYQI0Hk" }
     ]
+  },
+  "minecraft": {
+    "host": "192.168.68.151",
+    "port": 25565,
+    "metricsPort": 19565,
+    "container": "minecraft"
   }
 }
