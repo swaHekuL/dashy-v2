@@ -13,9 +13,9 @@ One new rotating Dashy panel, **JKMC**, that shows at a glance who is playing on
 | --- | --- |
 | Panel count | One panel, `minecraft`, StatusBar segment **JKMC** |
 | Left half | Player list: head avatar, name, time online, Bedrock badge. Header shows `N/max · peak today`. Empty state: "Nobody's on" with the last player seen and how long ago |
-| Right half | 2×2 stat tiles: **TPS**, **CPU**, **RAM**, **WORLD** (chunks + entities), plus a footer line with container uptime and disk % |
+| Right half | 2×2 stat tiles: **TPS**, **CPU**, **RAM**, **WORLD** (chunks + entities). CPU and RAM show the container value large, with the Proxmox host's value small underneath. A footer line shows container uptime + disk % and host uptime + disk % |
 | Lag stat | TPS only. No MSPT: on Paper, the exporter measures the interval *between* ticks, not the work done in each tick, so a true MSPT figure isn't available (see "Exporter notes") |
-| Host stats | Not shown. Only the `minecraft` container (CT 101) |
+| Host stats | Shown inside the CPU/RAM tiles and the footer (added after the initial approval; Luke chose "tiles show CT + host" over a separate footer line or a SERVER panel). Read from `GET /nodes/pve/status` with the same read-only token |
 | Architecture | Option A: one API route plus small single-purpose helpers in `lib/` |
 | Proxmox token | Created by Claude over SSH and piped directly into the Pi's `.env.local` (never echoed) |
 
@@ -47,6 +47,7 @@ No tunnel is involved. The Cloudflare tunnel's ingress routes only `/api/claude-
 
 ### `lib/proxmox.js`: read-only Proxmox client
 - `getContainer(name) → { status, cpuPct, cpus, memUsed, memMax, diskUsed, diskMax, uptime }`.
+- `getHost() → { cpuPct, cpus, memUsed, memMax, diskUsed, diskMax, uptime }` from `GET /nodes/pve/status` (`cpu` fraction, `cpuinfo.cpus`, `memory.{used,total}`, `rootfs.{used,total}`, `uptime`).
 - `GET {PROXMOX_URL}/api2/json/nodes/pve/lxc`, header `Authorization: PVEAPIToken={PROXMOX_TOKEN_ID}={PROXMOX_TOKEN_SECRET}`, then the entry where `name === 'minecraft'` (not hardcoded vmid 101).
 - TLS: `node:https` with `ca` read from `config/pve-root-ca.pem`. **Never** `rejectUnauthorized: false` or `NODE_TLS_REJECT_UNAUTHORIZED`.
 - `cpuPct = cpu * 100` (Proxmox reports a fraction of the container's allotted `cpus`). 5s timeout.
@@ -62,7 +63,7 @@ No tunnel is involved. The Cloudflare tunnel's ingress routes only `/api/claude-
 - If the server is offline, history is not updated (players are kept, so a short blip doesn't reset their time online).
 
 ### `pages/api/minecraft.js`: route (ESM)
-- Runs `ping`, `scrape` and `getContainer` with `Promise.allSettled`. Each part fails independently.
+- Runs `ping`, `scrape`, `getContainer` and `getHost` with `Promise.allSettled`. Each part fails independently.
 - Bedrock detection: the name starts with `.` (Floodgate prefix) or the UUID starts with `00000000-0000-0000-`. The display name has the leading `.` stripped.
 - Response:
   ```js
@@ -71,6 +72,7 @@ No tunnel is involved. The Cloudflare tunnel's ingress routes only `/api/claude-
             players: [{ name, uuid, bedrock, onlineSince }] } | { online: false },
     tps:  { tps, chunks, entities } | null,
     ct:   { status, cpuPct, cpus, memUsed, memMax, diskUsed, diskMax, uptime } | null,
+    host: { cpuPct, cpus, memUsed, memMax, diskUsed, diskMax, uptime } | null,
     history: { peakToday, lastSeen: { name, at } | null },
   }
   ```
@@ -86,11 +88,11 @@ Matches the existing visual language (see `screens/Portfolio.jsx`): black backgr
   - Offline: a large red `OFFLINE` + "last seen: …".
 - **Right half:** a 2×2 tile grid:
   - **TPS:** value to 1 decimal. Accent green ≥19, yellow ≥15, red otherwise.
-  - **CPU:** `cpuPct`% with "of N cores".
-  - **RAM:** `used/max` in GB with a bar.
+  - **CPU:** container `cpuPct`% large. Sub-line `4c · host 12%` (the host part is dropped if host is null).
+  - **RAM:** container `used/max` in GB with a bar. Sub-line `host 18.0/31.3G`. The accent turns red if the container *or* host is over 90%.
   - **WORLD:** `chunks` ch / `entities` ent.
   - Missing data → "—" with a gray accent.
-- **Footer:** `CT up 3d 4h · disk 41%`. It turns red when `ct.status !== 'running'`.
+- **Footer:** `CT up 3d 4h · disk 41% · host up 12d 3h · disk 40%`. The CT part turns red when `ct.status !== 'running'`; the host part turns red when host disk > 90%. A missing part becomes `CT —` / `host —`.
 - "Time online" and "ago" are computed client-side from epoch values. The current time is set in `useEffect` (no `useState(new Date())`, per the SSR hydration gotcha).
 - Loading state: the `PanelLoading` pattern with the text `JKMC`.
 
@@ -126,4 +128,4 @@ Matches the existing visual language (see `screens/Portfolio.jsx`): black backgr
 
 ## Out of scope
 
-Host-level Proxmox stats, the claude-agent container, sparklines/rrddata, MSPT, any Proxmox write/power actions, and any changes to the tunnel, router, or MC server config.
+The claude-agent container, host load average, sparklines/rrddata, MSPT, any Proxmox write/power actions, and any changes to the tunnel, router, or MC server config.
