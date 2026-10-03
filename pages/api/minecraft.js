@@ -2,7 +2,7 @@ import settings from '../../config/settings.json';
 import { ping } from '../../lib/slp';
 import { scrape } from '../../lib/mcMetrics';
 import { getContainer, getHost } from '../../lib/proxmox';
-import { resolvePlayers } from '../../lib/mcPlayers';
+import { resolvePlayers, normalizePlayer } from '../../lib/mcPlayers';
 import { load, save, update, peakToday } from '../../lib/mcHistory';
 
 let history = null;
@@ -38,12 +38,21 @@ export default async function handler(req, res) {
   if (slp.status === 'fulfilled') {
     const s = slp.value;
     const exporterPlayers = metrics.status === 'fulfilled' ? metrics.value.players : null;
-    const players = resolvePlayers(s.sample, exporterPlayers, s.playersOnline);
+    const resolved = resolvePlayers(s.sample, exporterPlayers, s.playersOnline);
 
-    const next = update(history, players, now);
-    history = next.state;
-    if (next.changed) {
-      try { save(history); } catch (e) { console.error('[minecraft] history save:', e.message); }
+    let players;
+    if (resolved === null) {
+      // Players are on but unnamed this poll: keep last known list, don't end their sessions.
+      players = Object.entries(history.online)
+        .map(([uuid, info]) => normalizePlayer({ name: info.name, id: uuid }))
+        .filter(Boolean);
+    } else {
+      players = resolved;
+      const next = update(history, players, now);
+      history = next.state;
+      if (next.changed) {
+        try { save(history); } catch (e) { console.error('[minecraft] history save:', e.message); }
+      }
     }
 
     mc = {
