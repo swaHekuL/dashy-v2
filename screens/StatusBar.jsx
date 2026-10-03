@@ -11,10 +11,11 @@ const SEGMENT_MAP = {
   'steam-releases': { segment: 'STEAM', sub: 'RELEASES' },
   stocks:           { segment: 'STOCKS' },
   portfolio:        { segment: 'PORTFOLIO' },
+  minecraft:        { segment: 'JKMC' },
   camera:           { segment: 'CAMERA' },
 };
 
-const SEGMENTS = ['WEATHER', 'CALENDAR', 'GMAIL', 'PORTFOLIO', 'CAMERA'];
+const SEGMENTS = ['WEATHER', 'CALENDAR', 'GMAIL', 'PORTFOLIO', 'JKMC', 'CAMERA'];
 // const SEGMENTS = ['WEATHER', 'CALENDAR', 'GMAIL', 'NEWS', 'STEAM', 'STOCKS', 'GAS', 'CAMERA'];
 
 export default function StatusBar({ currentPanel }) {

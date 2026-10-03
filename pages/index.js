@@ -9,6 +9,7 @@ import Gmail from '../screens/Gmail';
 import Stocks from '../screens/Stocks';
 import Portfolio from '../screens/Portfolio';
 import Camera from '../screens/Camera';
+import Minecraft from '../screens/Minecraft';
 import StatusBar from '../screens/StatusBar';
 
 const PANELS = [
@@ -17,6 +18,7 @@ const PANELS = [
   // 'steam-sales', 'steam-releases',
   // 'stocks',
   'portfolio',
+  'minecraft',
 ];
 
 const CAMERAS = ['tapo', 'ring'];
@@ -38,6 +40,7 @@ const REFRESH_MS = {
   'steam-releases': 60 * 60 * 1000,
   stocks:            5 * 60 * 1000,
   portfolio:         60 * 60 * 1000,
+  minecraft:         30 * 1000,
 };
 
 const NEWS_LABELS = {
@@ -56,7 +59,7 @@ export default function Home() {
     weather: null, calendar: null, gmail: null,
     'news-world': null, 'news-gaming': null, 'news-tech': null,
     'news-sports': null, 'news-utah': null,
-    steamData: null, stocks: null, portfolio: null,
+    steamData: null, stocks: null, portfolio: null, minecraft: null,
   });
   const [notifications, setNotifications] = useState([]);
   const rotationRef = useRef(null);
@@ -179,6 +182,7 @@ export default function Home() {
             {current === 'steam-releases' && <SteamReleases data={data.steamData} />}
             {current === 'stocks'         && <Stocks        data={data.stocks}   />}
             {current === 'portfolio'      && <Portfolio     data={data.portfolio} />}
+            {current === 'minecraft'      && <Minecraft     data={data.minecraft} />}
           </>
         )}
       </div>
