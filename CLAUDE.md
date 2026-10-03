@@ -2,24 +2,33 @@
 
 ## Project
 
-Passive auto-rotating Next.js 16.2.6 (Turbopack) dashboard for Raspberry Pi 3B+ (800×480). 12 panels cycle every 10s:
+Passive auto-rotating Next.js 16.2.6 (Turbopack) dashboard for Raspberry Pi 3B+ (800×480). Active panels (`PANELS` in `pages/index.js`) cycle every 10s:
 
 - **weather** — current temp/condition/wind + 4-slot hourly forecast cards (Open-Meteo)
-- **calendar** — next 3 Google Calendar events grouped by date with TODAY/TOMORROW headers
+- **calendar** — upcoming Google Calendar + Outlook ICS events grouped by date
 - **gmail** — unread count + message previews (Google Gmail API)
-- **news-world / news-gaming / news-tech / news-sports / news-utah** — 3 headlines each from RSS feeds (BBC, IGN, The Verge, ESPN, Deseret News)
-- **steam-sales** — up to 4 discounted Steam games
-- **steam-releases** — up to 4 new Steam releases
-- **stocks** — AAPL, VTI, NVDA price cards with change % (Yahoo Finance)
-- **gas** — Maverik regular unleaded prices at two stations with delta vs. last check (Google Maps Places API)
+- **portfolio** — SnapTrade account values with daily change
+- **minecraft** — JKMC server: player list (avatars, time online, Bedrock badge, daily peak, last seen) + TPS, the `minecraft` LXC container's CPU/RAM/disk/uptime, and the Proxmox host's CPU/RAM/disk/uptime
 
-A **StatusBar** at the bottom highlights which segment (WEATHER / CALENDAR / GMAIL / NEWS / STEAM / STOCKS / GAS) is active.
+Disabled but still in the code (commented out in `PANELS`): news-*, steam-*, stocks. The **camera** overlay toggles with Escape.
+
+A **StatusBar** at the bottom highlights the active segment (WEATHER / CALENDAR / GMAIL / PORTFOLIO / JKMC / CAMERA).
+
+### JKMC panel data sources (all LAN-only, fetched server-side by `/api/minecraft`)
+
+- Server List Ping → `192.168.68.151:25565` (`lib/slp.js`)
+- Prometheus exporter plugin (drewburr `prometheus-exporter-paper`) → `http://192.168.68.151:19565/metrics` (`lib/mcMetrics.js`). On Paper its tick-seconds metric is the inter-tick interval, **not MSPT**, so only TPS is shown.
+- Proxmox API → `https://192.168.68.150:8006` (`/nodes/pve/lxc` + `/nodes/pve/status`), read-only `dashy@pve!dashy` token (`PVEAuditor`), TLS pinned to `config/pve-root-ca.pem` (`lib/proxmox.js`). Container CPU comes from the newest `rrddata` point, because the list endpoint's `cpu` is an instantaneous sample that often reads 0.
+- Player history persists in `data/mc-history.json` (gitignored)
+- Tests: `npm test` (node:test, `lib/__tests__/`)
 
 ## Config Files
 
 - `config/credentials.json` — gitignored, Google OAuth secrets (client_id, client_secret, refresh_token)
-- `config/settings.json` — tracked in git, non-sensitive: lat/lon for Open-Meteo weather, `tickers` array for Stocks panel, `gasPrices.stations` array with Place IDs for Gas panel
+- `config/settings.json` — tracked in git, non-sensitive: lat/lon for Open-Meteo weather, `tickers`, `gasPrices.stations`, and `minecraft` (`host`, `port`, `metricsPort`, `container`) for the JKMC panel
 - `.env.local` — gitignored, `GOOGLE_MAPS_API_KEY` for the gas prices Places API
+- `.env.local` — also holds `PROXMOX_URL`, `PROXMOX_TOKEN_ID`, `PROXMOX_TOKEN_SECRET` (read-only Proxmox token; Pi + dev machine only, never commit or print)
+- `config/pve-root-ca.pem` — gitignored (`*.pem`), copy of the Proxmox host's `/etc/pve/pve-root-ca.pem`; must be placed on the Pi by hand
 
 ## Pi Deployment
 
