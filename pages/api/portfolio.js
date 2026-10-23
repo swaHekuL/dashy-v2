@@ -1,3 +1,4 @@
+import { getPortfolioSeries, pushPortfolio } from '../../lib/history';
 import { Snaptrade, SnaptradeAuth } from 'snaptrade-typescript-sdk';
 
 // Client is lazily created so missing env vars don't crash module load
@@ -71,11 +72,12 @@ export default async function handler(req, res) {
   }
 
   const now = Date.now();
-  if (cache && now - cacheAt < TTL) return res.json(cache);
+  if (cache && now - cacheAt < TTL) return res.json({ ...cache, charts: await getPortfolioSeries(30) });
 
   try {
     const today = todayET();
     const accounts = await fetchPortfolio();
+    await pushPortfolio(accounts); // fails soft; never breaks the response
 
     if (!baseline || baseline.date !== today) {
       // First fetch of the day — establish baseline, return null P&L
@@ -96,7 +98,7 @@ export default async function handler(req, res) {
       };
       // Do NOT cache the no-baseline response — next request after baseline
       // is established should immediately compute real P&L without waiting 1h.
-      return res.json(payload);
+      return res.json({ ...payload, charts: await getPortfolioSeries(30) });
     }
 
     // Subsequent fetches — compute P&L vs baseline
@@ -122,10 +124,10 @@ export default async function handler(req, res) {
     };
     cache = payload;
     cacheAt = now;
-    res.json(payload);
+    res.json({ ...payload, charts: await getPortfolioSeries(30) });
   } catch (e) {
     console.error('[portfolio]', e);
-    if (cache) return res.json(cache);
+    if (cache) return res.json({ ...cache, charts: await getPortfolioSeries(30) });
     res.status(503).json({ error: 'unavailable' });
   }
 }

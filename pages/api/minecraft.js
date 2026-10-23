@@ -4,6 +4,7 @@ import { scrape } from '../../lib/mcMetrics';
 import { getContainer, getHost } from '../../lib/proxmox';
 import { resolvePlayers, normalizePlayer } from '../../lib/mcPlayers';
 import { load, save, update, peakToday } from '../../lib/mcHistory';
+import { getJkmcSeries } from '../../lib/history';
 
 let history = null;
 // Log each failure once when it starts, not every 30s while it lasts.
@@ -20,11 +21,12 @@ export default async function handler(req, res) {
   const cfg = settings.minecraft;
   if (!cfg?.host) return res.status(503).json({ error: 'minecraft not configured' });
 
-  const [slp, metrics, ct, host] = await Promise.allSettled([
+  const [slp, metrics, ct, host, charts] = await Promise.allSettled([
     ping({ host: cfg.host, port: cfg.port }),
     scrape({ url: `http://${cfg.host}:${cfg.metricsPort}/metrics` }),
     getContainer(cfg.container),
     getHost(),
+    getJkmcSeries(72),
   ]);
   report('slp', slp);
   report('metrics', metrics);
@@ -75,5 +77,6 @@ export default async function handler(req, res) {
     ct: ct.status === 'fulfilled' ? ct.value : null,
     host: host.status === 'fulfilled' ? host.value : null,
     history: { peakToday: peakToday(history, now), lastSeen: history.lastSeen },
+    charts: charts.status === 'fulfilled' ? charts.value : null,
   });
 }

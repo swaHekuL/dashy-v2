@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Sparkline from '../components/Sparkline';
 import { fmtDuration, fmtAgo, fmtGB, tpsColor } from '../lib/mcFormat';
 
 const GREEN = '#4caf50';
@@ -107,47 +108,43 @@ function Players({ mc, history, now }) {
   );
 }
 
-function Tile({ label, value, sub, accent, bar }) {
+// One wide row per metric: number + detail on the left, 72 h chart on the right.
+function Row({ label, value, sub, accent, points, min, max, color }) {
   return (
     <div style={{ background: '#111', borderRadius: '8px', overflow: 'hidden', display: 'flex', minHeight: 0 }}>
       <div style={{ width: '5px', flexShrink: 0, background: accent ?? GRAY }} />
-      <div style={{ flex: 1, padding: '0 1.5vw', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.6vh' }}>
-        <div style={LABEL}>{label}</div>
-        <div style={{ color: '#fff', fontSize: '3.5vw', fontWeight: 500, lineHeight: 1 }}>{value}</div>
-        {bar != null && (
-          <div style={{ height: '0.8vh', background: '#222', borderRadius: '2px' }}>
-            <div style={{ width: `${Math.min(100, bar * 100)}%`, height: '100%', background: accent ?? GRAY, borderRadius: '2px' }} />
-          </div>
-        )}
-        {sub && <div style={{ color: '#9aa0a6', fontSize: '1.6vw' }}>{sub}</div>}
+      <div style={{ width: '38%', padding: '0 1.2vw', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.4vh', minWidth: 0 }}>
+        <div style={{ ...LABEL, fontSize: '1.5vw' }}>{label}</div>
+        <div style={{ color: '#fff', fontSize: '2.8vw', fontWeight: 500, lineHeight: 1, whiteSpace: 'nowrap' }}>{value}</div>
+        {sub && <div style={{ color: '#9aa0a6', fontSize: '1.3vw', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</div>}
       </div>
+      {points !== undefined && (
+        <div style={{ flex: 1, padding: '1.2vh 1vw 1.2vh 0', minWidth: 0 }}>
+          <Sparkline points={points} min={min} max={max} color={color ?? accent ?? GREEN} fill />
+        </div>
+      )}
     </div>
   );
 }
 
-function Stats({ tps, ct, host }) {
+function Stats({ tps, ct, host, charts }) {
   const dash = '—';
   const memFrac = ct ? ct.memUsed / ct.memMax : null;
   const hostMemFrac = host ? host.memUsed / host.memMax : null;
   const cpuSub = [ct && `${ct.cpus}c`, host && `host ${Math.round(host.cpuPct)}%`].filter(Boolean).join(' · ') || null;
   const ramSub = host ? `host ${fmtGB(host.memUsed)}/${fmtGB(host.memMax)}G` : null;
+  const s = charts?.series;
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '10px', minHeight: 0 }}>
-      <Tile label="TPS" value={tps?.tps != null ? tps.tps.toFixed(1) : dash} accent={tpsColor(tps?.tps)} />
-      <Tile label="CPU" value={ct ? `${Math.round(ct.cpuPct)}%` : dash} sub={cpuSub} accent={ct ? GREEN : null} />
-      <Tile
-        label="RAM"
-        value={ct ? `${fmtGB(ct.memUsed)}/${fmtGB(ct.memMax)}G` : dash}
-        sub={ramSub}
-        bar={memFrac}
+    <div style={{ display: 'grid', gridTemplateRows: 'repeat(4, 1fr)', gap: '8px', minHeight: 0 }}>
+      <Row label="TPS" value={tps?.tps != null ? tps.tps.toFixed(1) : dash} accent={tpsColor(tps?.tps)}
+        points={s ? s.mc_tps : undefined} min={0} max={20.5} />
+      <Row label="CPU" value={ct ? `${Math.round(ct.cpuPct)}%` : dash} sub={cpuSub} accent={ct ? GREEN : null}
+        points={s ? s.ct_cpu_pct : undefined} min={0} max={100} />
+      <Row label="RAM" value={ct ? `${fmtGB(ct.memUsed)}/${fmtGB(ct.memMax)}G` : dash} sub={ramSub}
         accent={ct ? (memFrac > 0.9 || hostMemFrac > 0.9 ? RED : GREEN) : null}
-      />
-      <Tile
-        label="World"
-        value={tps ? `${tps.chunks} ch` : dash}
-        sub={tps ? `${tps.entities} entities` : null}
-        accent={tps ? GREEN : null}
-      />
+        points={s ? s.ct_mem_used : undefined} min={0} max={ct?.memMax} />
+      <Row label="World" value={tps ? `${tps.chunks} ch` : dash} sub={tps ? `${tps.entities} entities` : null}
+        accent={tps ? GREEN : null} points={s ? s.mc_chunks : undefined} />
     </div>
   );
 }
@@ -193,7 +190,7 @@ export default function Minecraft({ data }) {
   }, []);
 
   if (!data) return <PanelLoading />;
-  const { mc, tps, ct, host, history } = data;
+  const { mc, tps, ct, host, history, charts } = data;
 
   return (
     <div style={{
@@ -216,7 +213,7 @@ export default function Minecraft({ data }) {
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', minHeight: 0 }}>
         <Players mc={mc} history={history} now={now} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1vh', minHeight: 0 }}>
-          <div style={{ flex: 1, display: 'grid', minHeight: 0 }}><Stats tps={tps} ct={ct} host={host} /></div>
+          <div style={{ flex: 1, display: 'grid', minHeight: 0 }}><Stats tps={tps} ct={ct} host={host} charts={charts} /></div>
           <Footer ct={ct} host={host} />
         </div>
       </div>
