@@ -25,8 +25,21 @@ function pnl(change, pct) {
   return `${change >= 0 ? '+' : '-'}$${fmt(Math.abs(change))}  ·  ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
 }
 
+// Change across the chart being shown (first to last point). Null until there are 2+ points.
+function rangeChange(points) {
+  if (!points || points.length < 2) return null;
+  const first = points[0][1];
+  const change = points[points.length - 1][1] - first;
+  return { change, pct: first ? (change / first) * 100 : 0 };
+}
+
 function AccountCard({ account, points }) {
-  const { name, totalValue, dailyChange, dailyChangePct, hasBaseline } = account;
+  const { name, totalValue, hasBaseline: dailyBaseline } = account;
+  // With a chart, show the change over that chart's range; otherwise today's change.
+  const rc = rangeChange(points);
+  const dailyChange = rc ? rc.change : account.dailyChange;
+  const dailyChangePct = rc ? rc.pct : account.dailyChangePct;
+  const hasBaseline = rc ? true : dailyBaseline;
   const up = hasBaseline && dailyChange > 0;
   const flat = hasBaseline && dailyChange === 0;
   const accentColor = !hasBaseline ? '#444' : flat ? '#888' : up ? GREEN : RED;
@@ -58,8 +71,12 @@ export default function Portfolio({ data }) {
   const total = accounts.reduce((sum, a) => sum + a.totalValue, 0);
   const change = withBase.reduce((sum, a) => sum + a.dailyChange, 0);
   const baseTotal = withBase.reduce((sum, a) => sum + a.totalValue - a.dailyChange, 0);
-  const pct = baseTotal ? (change / baseTotal) * 100 : 0;
+  const dailyPct = baseTotal ? (change / baseTotal) * 100 : 0;
   const totalPts = charts ? charts.total : undefined;
+  const rc = rangeChange(totalPts);
+  const shownChange = rc ? rc.change : change;
+  const shownPct = rc ? rc.pct : dailyPct;
+  const showPnl = rc || withBase.length > 0;
   const hasCharts = !!charts;
   const since = totalPts?.length > 1
     ? new Date(totalPts[0][0] * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -86,8 +103,8 @@ export default function Portfolio({ data }) {
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '1.5vw' }}>
         <span style={{ color: '#9aa0a6', fontSize: '1.8vw', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Portfolio</span>
         <span style={{ color: '#fff', fontSize: '3vw', fontWeight: 500 }}>${fmt(total)}</span>
-        {withBase.length > 0 && (
-          <span style={{ color: change === 0 ? '#9aa0a6' : change > 0 ? GREEN : RED, fontSize: '1.8vw', fontWeight: 500 }}>{pnl(change, pct)}</span>
+        {showPnl && (
+          <span style={{ color: shownChange === 0 ? '#9aa0a6' : shownChange > 0 ? GREEN : RED, fontSize: '1.8vw', fontWeight: 500 }}>{pnl(shownChange, shownPct)}</span>
         )}
         <span style={{ marginLeft: 'auto', color: '#666', fontSize: '1.4vw' }}>{data.chartRange ? `${data.chartRange} · ` : ''}{since ? `since ${since}` : '30 d'}</span>
       </div>
