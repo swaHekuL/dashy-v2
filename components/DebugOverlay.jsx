@@ -31,6 +31,7 @@ export default function DebugOverlay({ getState }) {
   useEffect(() => {
     const onKey = (e) => {
       const now = Date.now();
+      fetch('/api/debug', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: e.key, code: e.code, keyCode: e.keyCode }) }).catch(() => {});
       const r = comboStep(combo.current, e.key, now);
       combo.current = r.state;
       if (r.fired || isKeyboardToggle(e)) {

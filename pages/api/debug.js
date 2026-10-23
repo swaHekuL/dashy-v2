@@ -9,7 +9,16 @@ const run = (cmd, args) => new Promise(resolve => {
   execFile(cmd, args, { timeout: 2000 }, (err, out) => resolve(err ? null : String(out).trim()));
 });
 
+// Last keys the browser saw, so they can be read over ssh without the overlay.
+const recentKeys = [];
+
 export default async function handler(req, res) {
+  if (req.method === 'POST') {
+    const { key, code, keyCode } = req.body ?? {};
+    recentKeys.push({ at: new Date().toISOString(), key: String(key).slice(0, 20), code: String(code).slice(0, 20), keyCode: Number(keyCode) || 0 });
+    if (recentKeys.length > 30) recentKeys.shift();
+    return res.status(204).end();
+  }
   if (commit === null) commit = (await run('git', ['rev-parse', '--short', 'HEAD'])) ?? 'unknown';
   let buildId = null;
   try { buildId = fs.readFileSync('.next/BUILD_ID', 'utf8').trim().slice(0, 8); } catch {}
@@ -24,5 +33,6 @@ export default async function handler(req, res) {
     memFreeMB: Math.round(os.freemem() / 1048576),
     memTotalMB: Math.round(os.totalmem() / 1048576),
     nodeUptimeSec: Math.round(process.uptime()),
+    recentKeys,
   });
 }
