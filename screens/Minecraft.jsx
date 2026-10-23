@@ -204,6 +204,7 @@ export default function Minecraft({ data }) {
           ● {mc.online ? 'ONLINE' : 'OFFLINE'}
         </span>
         {mc.online && <span style={{ color: '#9aa0a6', fontSize: '1.8vw' }}>{mc.version}</span>}
+        {data.chartRange && <span style={{ color: '#ffd54f', fontSize: '1.8vw', fontWeight: 700 }}>charts {data.chartRange}</span>}
         <span style={{ marginLeft: 'auto', color: '#fff', fontSize: '2vw', fontWeight: 500 }}>
           {mc.online ? `${mc.playersOnline}/${mc.playersMax}` : ''}
           <span style={{ color: '#9aa0a6', fontWeight: 400 }}>{mc.online ? ' · ' : ''}peak {history.peakToday}</span>

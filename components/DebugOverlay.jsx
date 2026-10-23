@@ -7,6 +7,11 @@ import { getDebugStore, hookErrors } from '../lib/debugStore';
 
 const STORAGE_KEY = 'dashy-debug';
 
+const mods = (e) => [e.ctrlKey && 'ctrl', e.shiftKey && 'shift', e.altKey && 'alt', e.metaKey && 'meta'].filter(Boolean).join('+');
+const sendLog = (body) => {
+  fetch('/api/debug', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).catch(() => {});
+};
+
 // Hidden by default. Toggle: Left x3 then Right x3 (remote), Ctrl+Shift+D (keyboard),
 // or ?debug=1 / ?debug=0 in the address (saved in the browser). Never takes input or touches.
 // getState() returns { panel, panelIndex, panelCount, rotating, camera, data }.
@@ -31,7 +36,7 @@ export default function DebugOverlay({ getState }) {
   useEffect(() => {
     const onKey = (e) => {
       const now = Date.now();
-      fetch('/api/debug', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: e.key, code: e.code, keyCode: e.keyCode }) }).catch(() => {});
+      sendLog({ ev: 'keydown', key: e.key, code: e.code, keyCode: e.keyCode, mods: mods(e) });
       const r = comboStep(combo.current, e.key, now);
       combo.current = r.state;
       if (r.fired || isKeyboardToggle(e)) {
@@ -40,8 +45,14 @@ export default function DebugOverlay({ getState }) {
       }
       setKeys(k => pushLimited(k, describeKey(e, now), KEY_LOG_SIZE));
     };
+    const onUp = (e) => sendLog({ ev: 'keyup', key: e.key, code: e.code, keyCode: e.keyCode, mods: mods(e) });
+    // Record every page load and how it started (reload vs navigate), so a button that
+    // refreshes the page leaves a trace even though the page's own key list is wiped.
+    const nav = performance.getEntriesByType?.('navigation')?.[0];
+    sendLog({ ev: 'pageload', note: nav?.type ?? 'unknown' });
     window.addEventListener('keydown', onKey, true);
-    return () => window.removeEventListener('keydown', onKey, true);
+    window.addEventListener('keyup', onUp, true);
+    return () => { window.removeEventListener('keydown', onKey, true); window.removeEventListener('keyup', onUp, true); };
   }, []);
 
   useEffect(() => {

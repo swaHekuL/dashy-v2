@@ -89,7 +89,7 @@ export default function Portfolio({ data }) {
         {withBase.length > 0 && (
           <span style={{ color: change === 0 ? '#9aa0a6' : change > 0 ? GREEN : RED, fontSize: '1.8vw', fontWeight: 500 }}>{pnl(change, pct)}</span>
         )}
-        <span style={{ marginLeft: 'auto', color: '#666', fontSize: '1.4vw' }}>{since ? `since ${since}` : '30 d'}</span>
+        <span style={{ marginLeft: 'auto', color: '#666', fontSize: '1.4vw' }}>{data.chartRange ? `${data.chartRange} · ` : ''}{since ? `since ${since}` : '30 d'}</span>
       </div>
       <div style={{ flex: 4, minHeight: 0, background: '#111', borderRadius: '8px', padding: '1vh 1vw' }}>
         <Sparkline points={totalPts} color={trendColor(totalPts)} minSpan={0.01 * total} fill />

@@ -14,9 +14,14 @@ const recentKeys = [];
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
-    const { key, code, keyCode } = req.body ?? {};
-    recentKeys.push({ at: new Date().toISOString(), key: String(key).slice(0, 20), code: String(code).slice(0, 20), keyCode: Number(keyCode) || 0 });
-    if (recentKeys.length > 30) recentKeys.shift();
+    const b = req.body ?? {};
+    const short = (v) => String(v ?? '').slice(0, 24);
+    recentKeys.push({
+      at: new Date().toISOString(), ev: short(b.ev || 'keydown'),
+      key: short(b.key), code: short(b.code), keyCode: Number(b.keyCode) || 0,
+      mods: short(b.mods), note: short(b.note),
+    });
+    if (recentKeys.length > 60) recentKeys.shift();
     return res.status(204).end();
   }
   if (commit === null) commit = (await run('git', ['rev-parse', '--short', 'HEAD'])) ?? 'unknown';

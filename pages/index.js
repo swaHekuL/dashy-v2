@@ -13,6 +13,7 @@ import Minecraft from '../screens/Minecraft';
 import StatusBar from '../screens/StatusBar';
 import DebugOverlay from '../components/DebugOverlay';
 import { recordFetch } from '../lib/debugStore';
+import { RANGE_KEY, defaultRange, nextRange, rangeLabel } from '../lib/chartRanges';
 
 const PANELS = [
   'weather', 'calendar', 'gmail',
@@ -64,6 +65,10 @@ export default function Home() {
     steamData: null, stocks: null, portfolio: null, minecraft: null,
   });
   const [notifications, setNotifications] = useState([]);
+  // Non-default chart ranges chosen with the remote's "b" button: { minecraft: { n, charts } }.
+  const [rangeOverride, setRangeOverride] = useState({});
+  const rangeTimerRef = useRef(null);
+  const rangeRef = useRef({});
   const rotationRef = useRef(null);
   const resumeTimerRef = useRef(null);
 
@@ -113,6 +118,46 @@ export default function Home() {
     return () => clearInterval(id);
   }, []);
 
+  const fetchRange = useCallback(async (panel, n) => {
+    try {
+      const res = await fetch(`/api/charts?panel=${panel}&range=${n}`);
+      recordFetch(`charts-${panel}`, res.ok, res.status);
+      if (!res.ok) return;
+      const { charts } = await res.json();
+      // Ignore a late answer if the range was changed or reset meanwhile.
+      if (rangeRef.current[panel] !== n) return;
+      setRangeOverride(prev => ({ ...prev, [panel]: { n, charts } }));
+    } catch (e) {
+      recordFetch(`charts-${panel}`, false, 'net');
+      console.error(`[fetchRange] ${panel}:`, e);
+    }
+  }, []);
+
+  const cycleRange = useCallback((panel) => {
+    const cur = rangeRef.current[panel] ?? defaultRange(panel);
+    const n = nextRange(panel, cur);
+    if (n == null) return false;
+    clearTimeout(rangeTimerRef.current);
+    if (n === defaultRange(panel)) {
+      delete rangeRef.current[panel];
+      setRangeOverride(prev => { const { [panel]: _, ...rest } = prev; return rest; });
+    } else {
+      rangeRef.current = { ...rangeRef.current, [panel]: n };
+      fetchRange(panel, n);
+      // Back to the default range after the same idle time that resumes rotation.
+      rangeTimerRef.current = setTimeout(() => { rangeRef.current = {}; setRangeOverride({}); }, INACTIVITY_MS);
+    }
+    return true;
+  }, [fetchRange]);
+
+  // Keep a non-default range fresh while it is showing.
+  useEffect(() => {
+    const id = setInterval(() => {
+      Object.entries(rangeRef.current).forEach(([panel, n]) => fetchRange(panel, n));
+    }, 30 * 1000);
+    return () => clearInterval(id);
+  }, [fetchRange]);
+
   const startRotation = useCallback(() => {
     clearInterval(rotationRef.current);
     rotationRef.current = setInterval(
@@ -150,6 +195,11 @@ export default function Home() {
         return;
       }
 
+      if (e.key === RANGE_KEY && !showCamera) {
+        if (cycleRange(PANELS[panelIndex])) resetInactivityTimer();
+        return;
+      }
+
       const isRight = e.key === 'ArrowRight' || e.key === 'PageDown';
       const isLeft  = e.key === 'ArrowLeft'  || e.key === 'PageUp';
       if (!isRight && !isLeft) return;
@@ -166,9 +216,13 @@ export default function Home() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [resetInactivityTimer, startRotation, showCamera]);
+  }, [resetInactivityTimer, startRotation, showCamera, cycleRange, panelIndex]);
 
   const current = PANELS[panelIndex];
+  const withRange = (panel, d) => {
+    const o = rangeOverride[panel];
+    return d && o ? { ...d, charts: o.charts ?? d.charts, chartRange: rangeLabel(panel, o.n) } : d;
+  };
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -185,8 +239,8 @@ export default function Home() {
             {current === 'steam-sales'    && <SteamSales    data={data.steamData} />}
             {current === 'steam-releases' && <SteamReleases data={data.steamData} />}
             {current === 'stocks'         && <Stocks        data={data.stocks}   />}
-            {current === 'portfolio'      && <Portfolio     data={data.portfolio} />}
-            {current === 'minecraft'      && <Minecraft     data={data.minecraft} />}
+            {current === 'portfolio'      && <Portfolio     data={withRange('portfolio', data.portfolio)} />}
+            {current === 'minecraft'      && <Minecraft     data={withRange('minecraft', data.minecraft)} />}
           </>
         )}
       </div>
