@@ -11,6 +11,8 @@ import Portfolio from '../screens/Portfolio';
 import Camera from '../screens/Camera';
 import Minecraft from '../screens/Minecraft';
 import StatusBar from '../screens/StatusBar';
+import DebugOverlay from '../components/DebugOverlay';
+import { recordFetch } from '../lib/debugStore';
 
 const PANELS = [
   'weather', 'calendar', 'gmail',
@@ -79,10 +81,12 @@ export default function Home() {
     }
     try {
       const res = await fetch(apiUrl);
+      recordFetch(panel, res.ok, res.status);
       if (!res.ok) return;
       const json = await res.json();
       setData(prev => ({ ...prev, [dataKey]: json }));
     } catch (e) {
+      recordFetch(panel, false, 'net');
       console.error(`[fetchPanel] ${panel}:`, e);
     }
   };
@@ -187,6 +191,10 @@ export default function Home() {
         )}
       </div>
       <StatusBar currentPanel={showCamera ? 'camera' : current} />
+      <DebugOverlay getState={() => ({
+        panel: showCamera ? 'camera' : current, panelIndex, panelCount: PANELS.length,
+        rotating: rotationRef.current != null, camera: showCamera, data,
+      })} />
     </div>
   );
 }
