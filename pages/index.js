@@ -183,7 +183,9 @@ export default function Home() {
 
   useEffect(() => {
     const handleKey = (e) => {
-      if (e.key === CAMERA_KEY) {
+      // The remote's "down" button alternates Escape and Shift+F5 (a browser hard reload).
+      // Block the reload and treat both as the camera toggle.
+      if (e.key === CAMERA_KEY || e.key === 'F5') {
         e.preventDefault();
         if (showCamera) {
           setShowCamera(false);
