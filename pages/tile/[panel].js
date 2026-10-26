@@ -36,7 +36,7 @@ export default function Tile() {
     let live = true;
     const load = async () => {
       try {
-        const res = await fetch(`/api/${panel}`);
+        const res = await fetch(panel === 'calendar' ? '/api/calendar?limit=5' : `/api/${panel}`);
         if (!res.ok) return;
         const json = await res.json();
         if (live) setData(json);
@@ -71,9 +71,7 @@ export default function Tile() {
 
   if (panel === 'clock') {
     return (
-      <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: '#000' }}>
-        <Clock notifications={notifications} />
-      </div>
+      <Clock notifications={notifications} fill />
     );
   }
 

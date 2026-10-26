@@ -8,7 +8,9 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 
 function pad(n) { return String(n).padStart(2, '0'); }
 
-export default function Clock({ notifications = [] }) {
+// fill: take the whole box (TV tile) instead of the Pi's top 42%, so the time is centered in it.
+export default function Clock({ notifications = [], fill = false }) {
+  const boxHeight = fill ? '100vh' : '42vh';
   const [now, setNow] = useState(null);
 
   useEffect(() => {
@@ -17,7 +19,7 @@ export default function Clock({ notifications = [] }) {
     return () => clearInterval(id);
   }, []);
 
-  if (!now) return <div style={{ height: '42vh', background: '#000', flexShrink: 0 }} />;
+  if (!now) return <div style={{ height: boxHeight, background: '#000', flexShrink: 0 }} />;
 
   const h = now.getHours() % 12 || 12;
   const m = pad(now.getMinutes());
@@ -29,13 +31,13 @@ export default function Clock({ notifications = [] }) {
 
   return (
     <div className={bebas.className} style={{
-      height: '42vh',
+      height: boxHeight,
       background: '#000',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      borderBottom: '1px solid #1a1a1a',
+      borderBottom: fill ? 'none' : '1px solid #1a1a1a',
       flexShrink: 0,
       position: 'relative',
     }}>

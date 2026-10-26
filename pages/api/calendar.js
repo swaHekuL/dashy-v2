@@ -35,8 +35,11 @@ function getAuth() {
 }
 
 export default async function handler(req, res) {
+  // The Pi view shows 3 events; the TV view asks for more with ?limit=. The cache holds the full list.
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 3, 1), 10);
+  const reply = (c) => res.json({ ...c, events: c.events.slice(0, limit) });
   const now = Date.now();
-  if (cache && now - cacheAt < TTL) return res.json(cache);
+  if (cache && now - cacheAt < TTL) return reply(cache);
 
   try {
     const calendar = google.calendar({ version: 'v3', auth: getAuth() });
@@ -80,15 +83,14 @@ export default async function handler(req, res) {
 
     const merged = events
       .sort((a, b) => a._sort - b._sort)
-      .slice(0, 3)
       .map(({ _sort, ...e }) => e);
 
     cache = { events: merged };
     cacheAt = now;
-    res.json(cache);
+    reply(cache);
   } catch (e) {
     console.error('[calendar]', e);
-    if (cache) return res.json(cache);
+    if (cache) return reply(cache);
     res.status(503).json({ error: 'unavailable' });
   }
 }
