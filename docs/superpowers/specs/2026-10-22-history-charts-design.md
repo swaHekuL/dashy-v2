@@ -1,7 +1,7 @@
-<!-- Last updated: 2026-10-22 -->
+<!-- Last updated: 2026-10-26 -->
 # History charts (JKMC 72 h, Portfolio 30 d) — design
 
-Status: **approved 2026-10-22; collector code built and tested; container CT 103 created (192.168.68.153), not yet deployed to.**
+Status: **deployed 2026-10-23 (collector in CT 103, Dashy on the Pi). Remote "b" button cycles ranges; debug overlay shipped.**
 
 ## Goal
 
@@ -149,9 +149,9 @@ All requests need `Authorization: Bearer <token>`. The server binds to the conta
 
 ## Remote-button time views (follow-up)
 
-One unused remote button will cycle the chart range (JKMC 6 h / 24 h / 72 h; portfolio 7 d / 30 d / 90 d), resetting to the default after the idle timeout. The button's `key` value is **unknown**: test with Luke at his desk before wiring it in. The collector already supports any range, so this is a Dashy-only change.
+DONE: the "b" button cycles the chart range (JKMC 6 h / 24 h / 72 h; portfolio 7 d / 30 d / 90 d), resetting to the default after the idle timeout. The collector already supports any range, so this is a Dashy-only change.
 
 ## Open items
 
-- Remote button's key (test with Luke).
-- Luke reserves 192.168.68.153 in the Deco app.
+- None. Portfolio charts confirmed on the Pi by Luke (2026-10-26).
+
