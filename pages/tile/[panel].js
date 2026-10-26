@@ -17,6 +17,9 @@ const REFRESH_MS = {
   minecraft: 30 * 1000,
 };
 
+// The TV tiles have room for more rows than the Pi view; the APIs default to the Pi's counts.
+const TILE_URL = { calendar: '/api/calendar?limit=5', gmail: '/api/gmail?limit=5' };
+
 const PANELS = {
   weather: Weather,
   calendar: Calendar,
@@ -36,7 +39,7 @@ export default function Tile() {
     let live = true;
     const load = async () => {
       try {
-        const res = await fetch(panel === 'calendar' ? '/api/calendar?limit=5' : `/api/${panel}`);
+        const res = await fetch(TILE_URL[panel] ?? `/api/${panel}`);
         if (!res.ok) return;
         const json = await res.json();
         if (live) setData(json);

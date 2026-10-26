@@ -14,15 +14,18 @@ function getAuth() {
 }
 
 export default async function handler(req, res) {
+  // The Pi view shows 3 messages; the TV view asks for more with ?limit=. The cache holds the full list.
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 3, 1), 8);
+  const reply = (c) => res.json({ ...c, previews: c.previews.slice(0, limit) });
   const now = Date.now();
-  if (cache && now - cacheAt < TTL) return res.json(cache);
+  if (cache && now - cacheAt < TTL) return reply(cache);
 
   try {
     const gmail = google.gmail({ version: 'v1', auth: getAuth() });
 
     const [listRes, labelRes] = await Promise.all([
       gmail.users.messages.list(
-        { userId: 'me', labelIds: ['UNREAD', 'INBOX'], maxResults: 3 },
+        { userId: 'me', labelIds: ['UNREAD', 'INBOX'], maxResults: 8 },
         { timeout: 8000 }
       ),
       gmail.users.labels.get(
@@ -50,10 +53,10 @@ export default async function handler(req, res) {
 
     cache = { unreadCount, previews };
     cacheAt = now;
-    res.json(cache);
+    reply(cache);
   } catch (e) {
     console.error('[gmail]', e);
-    if (cache) return res.json(cache);
+    if (cache) return reply(cache);
     res.status(503).json({ error: 'unavailable' });
   }
 }
