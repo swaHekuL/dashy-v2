@@ -13,8 +13,10 @@ record plus the worker's child processes decide the state:
            for a while: the session is waiting for a permission answer
   review   the last record is the assistant finishing a turn (it is waiting for you)
   idle     nothing recent
+Each session also carries a title (see session_title).
 """
-import json, os, re, subprocess, sys, time
+import json, os, re, subprocess, sys, time, urllib.request
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HOME = os.path.expanduser("~")
@@ -23,7 +25,7 @@ UID = os.getuid()
 PORT = 8788
 WORKING_SEC = 8          # transcript touched this recently = busy
 BLOCKED_SEC = 20         # pending tool call untouched this long, no children = waiting on permission
-REVIEW_HOURS = 3         # finished turns older than this count as idle
+REVIEW_MIN = 30          # finished turns older than this count as idle (no tile)
 CACHE_SEC = 3
 
 
@@ -67,6 +69,109 @@ def last_record(path):
     return None
 
 
+TITLES = f"{HOME}/.local/state/ops-agent/titles.json"
+CRED = f"{HOME}/.claude/.credentials.json"
+CLAUDE_JSON = f"{HOME}/.claude.json"
+API_URL = "https://api.anthropic.com/v1/code/sessions?limit=100"
+API_EVERY = 20           # seconds between calls to the sessions API
+BLOCKED_DAYS = 2         # an app-flagged "needs you" older than this stops getting a tile
+
+
+def load_titles():
+    """cse_ id suffix -> the session's title as the Claude app shows it. The titles live on
+    Anthropic's side (sessions API), not on this machine; the file is refreshed from there and is
+    kept out of the repo because titles can be personal. Missing file or id = no title."""
+    try:
+        return json.load(open(TITLES))
+    except (OSError, ValueError):
+        return {}
+
+
+_api = {"at": 0, "rows": {}}
+
+
+def api_sessions():
+    """cse_ id suffix -> {title, bucket, updated} from the same sessions list Claude Code itself
+    reads (GET /v1/code/sessions, the list behind the app). Uses the login Claude Code keeps in
+    ~/.claude/.credentials.json, read here only to send this one request; it is never logged or
+    stored. Cached for API_EVERY seconds; on any failure the last good answer stays (and the
+    titles file below keeps names across restarts)."""
+    now = time.time()
+    if now - _api["at"] < API_EVERY:
+        return _api["rows"]
+    _api["at"] = now
+    try:
+        cred = json.load(open(CRED))["claudeAiOauth"]
+        if cred["expiresAt"] / 1000 < now:
+            return _api["rows"]          # Claude Code refreshes the token itself while a session runs
+        org = (json.load(open(CLAUDE_JSON)).get("oauthAccount") or {}).get("organizationUuid", "")
+        req = urllib.request.Request(API_URL, headers={
+            "Authorization": "Bearer " + cred["accessToken"],
+            "anthropic-version": "2023-06-01",
+            "anthropic-beta": "ccr-byoc-2025-07-29",
+            "x-organization-uuid": org,
+        })
+        data = json.load(urllib.request.urlopen(req, timeout=8))["data"]
+    except Exception as e:               # never include the exception text: it could echo a header
+        print(f"sessions api failed: {type(e).__name__}", file=sys.stderr)
+        return _api["rows"]
+    rows = {}
+    for r in data:
+        sid = str(r.get("id", ""))
+        if sid.startswith("cse_") and r.get("title"):
+            rows[sid[4:]] = {"title": r["title"], "bucket": r.get("status_bucket"), "updated": r.get("updated_at")}
+    _api["rows"] = rows
+    try:                                 # keep names for the next restart / token expiry
+        tmp = TITLES + ".tmp"
+        os.makedirs(os.path.dirname(TITLES), exist_ok=True)
+        json.dump({k: v["title"] for k, v in rows.items()}, open(tmp, "w"))
+        os.chmod(tmp, 0o600)
+        os.replace(tmp, TITLES)
+    except OSError:
+        pass
+    return rows
+
+
+def age_of(iso):
+    try:
+        return time.time() - datetime.fromisoformat(iso.replace("Z", "+00:00")).timestamp()
+    except Exception:
+        return 1e9
+
+
+def merge_state(local, row):
+    """The app's own status wins where it knows more: it flags sessions waiting for your reply."""
+    if local == "working":
+        return "working"
+    bucket = (row or {}).get("bucket")
+    age = age_of(row["updated"]) if row else 1e9
+    if bucket == "blocked" and age < BLOCKED_DAYS * 86400:
+        return "blocked"
+    if bucket == "failed" and age < 86400:
+        return "failed"
+    if local == "blocked":
+        return "blocked"
+    if bucket == "working":
+        return "working"
+    if local == "review" or (bucket == "review_ready" and age < REVIEW_MIN * 60):
+        return "review"
+    return "idle"
+
+
+def session_title(pid, cse, titles, project):
+    """Title from the app, else a real name set locally ("<folder>-xx" placeholders do not count),
+    else the folder name."""
+    if titles.get(cse):
+        return titles[cse]
+    try:
+        meta = json.load(open(f"{HOME}/.claude/sessions/{pid}.json"))
+    except (OSError, ValueError):
+        meta = {}
+    if meta.get("name") and meta.get("nameSource") != "derived":
+        return meta["name"]
+    return project
+
+
 def classify(rec, age, children):
     if rec is None:
         return "idle"
@@ -77,13 +182,15 @@ def classify(rec, age, children):
     if rec["type"] == "assistant":
         if "tool_use" in kinds:
             return "blocked" if age >= BLOCKED_SEC and age < 6 * 3600 else "idle"
-        return "review" if age < REVIEW_HOURS * 3600 else "idle"
+        return "review" if age < REVIEW_MIN * 60 else "idle"
     # last record is a user prompt or a tool result: the model should be working on it
     return "working" if age < 300 else "idle"
 
 
 def sessions():
     procs, kids = proc_table()
+    titles = load_titles()
+    api = api_sessions()
     out, now = [], time.time()
     for pid, (_, cmd) in procs.items():
         if "--sdk-url" not in cmd or "/code/sessions/cse_" not in cmd:
@@ -106,8 +213,12 @@ def sessions():
             age = now - os.path.getmtime(path)
         except OSError:
             continue
-        state = classify(last_record(path), age, has_children(pid, kids))
-        out.append({"project": os.path.basename(cwd), "state": state, "ageSec": int(age)})
+        cse = re.search(r"/code/sessions/cse_(\w+)", cmd).group(1)
+        row = api.get(cse)
+        state = merge_state(classify(last_record(path), age, has_children(pid, kids)), row)
+        project = os.path.basename(cwd)
+        title = row["title"] if row else session_title(pid, cse, titles, project)
+        out.append({"project": project, "title": title, "state": state, "ageSec": int(age)})
     order = {"blocked": 0, "working": 1, "review": 2, "idle": 3}
     out.sort(key=lambda s: (order[s["state"]], s["ageSec"]))
     return out

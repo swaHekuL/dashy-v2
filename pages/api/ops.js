@@ -3,7 +3,7 @@ import settings from '../../config/settings.json';
 import { getHost, getContainers } from '../../lib/proxmox';
 import mock from './ops-mock';
 
-const MAX_CARDS = 12;
+const MAX_CARDS = 10;
 // A failed Proxmox call keeps showing the last good numbers for a while instead of blanking the rings.
 const STALE_MS = 2 * 60 * 1000;
 const lastGood = { host: null, cts: null };
@@ -45,17 +45,14 @@ function containerChip(name, ct) {
   return { name, state: 'ok', note: null };
 }
 
-// Sessions are grouped so the panel keeps a fixed size: needs-you first, then working, then
-// finished, with everything idle folded into one "N idle" card.
+// Only sessions that need attention or are in use get a tile; idle ones are just counted, so the
+// panel is as full as the work is. Needs-you first (the agent already sorts them that way).
 function toCards(sessions) {
   const active = sessions.filter(s => s.state !== 'idle');
-  const idle = sessions.length - active.length;
-  const room = idle > 0 ? MAX_CARDS - 1 : MAX_CARDS;
-  const cards = active.slice(0, room).map(s => ({ project: s.project, state: s.state }));
-  const hidden = active.length - cards.length;
-  const rest = idle + hidden;
-  if (rest > 0) cards.push({ project: `${rest} idle`, state: 'idle', count: rest });
-  return cards;
+  return {
+    cards: active.slice(0, MAX_CARDS).map(s => ({ project: s.project, title: s.title, state: s.state })),
+    idle: sessions.length - active.length + Math.max(0, active.length - MAX_CARDS),
+  };
 }
 
 export default async function handler(req, res) {
@@ -78,6 +75,7 @@ export default async function handler(req, res) {
   if (host.status === 'fulfilled') lastGood.host = { v: host.value, at: Date.now() };
   if (cts.status === 'fulfilled') lastGood.cts = { v: cts.value, at: Date.now() };
   const fresh = (x) => (x && Date.now() - x.at < STALE_MS ? x.v : null);
+  const cards = agent.status === 'fulfilled' ? toCards(agent.value.sessions) : null;
   const h = fresh(lastGood.host);
   const list = fresh(lastGood.cts);
   const services = [
@@ -99,6 +97,7 @@ export default async function handler(req, res) {
       uptimeSec: h.uptime,
     } : null,
     services,
-    sessions: agent.status === 'fulfilled' ? toCards(agent.value.sessions) : null,
+    sessions: agent.status === 'fulfilled' ? cards.cards : null,
+    idle: agent.status === 'fulfilled' ? cards.idle : 0,
   });
 }

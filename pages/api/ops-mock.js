@@ -26,20 +26,14 @@ export default function handler(req, res) {
   ];
 
   const sessions = [
-    { project: 'dashy-v2',           state: 'working' },
-    { project: 'freelance-business', state: problems ? 'blocked' : 'working' },
-    { project: 'remarkable',         state: problems ? 'failed' : 'review' },
-    { project: 'home-agent',         state: 'idle' },
-    { project: 'workout-tracker',    state: 'idle' },
-    { project: 'jkmc',               state: 'idle' },
-    { project: 'recipes',            state: 'review' },
-    { project: 'job-search',         state: 'working' },
-    { project: 'room-projector',     state: 'idle' },
-    { project: 'wedding-planning',   state: 'idle' },
-    { project: 'ideas',              state: 'idle' },
-    { project: 'random',             state: 'idle' },
+    { project: 'dashy-v2',           title: 'Ops panel tiles',            state: 'working' },
+    { project: 'freelance-business', title: 'Client intake follow-ups',   state: problems ? 'blocked' : 'working' },
+    { project: 'remarkable',         title: 'Sync notes to OneDrive',     state: problems ? 'failed' : 'review' },
+    { project: 'recipes',            title: 'Weekly meal plan',           state: 'review' },
+    { project: 'job-search',         title: 'Job Search Control Center',  state: 'working' },
   ];
+  const idle = 9;
 
   res.setHeader('Cache-Control', 'no-store');
-  res.status(200).json({ mock: true, at: Date.now(), host, services, sessions });
+  res.status(200).json({ mock: true, at: Date.now(), host, services, sessions, idle });
 }
