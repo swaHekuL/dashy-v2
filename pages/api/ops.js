@@ -3,7 +3,10 @@ import settings from '../../config/settings.json';
 import { getHost, getContainers } from '../../lib/proxmox';
 import mock from './ops-mock';
 
-const MAX_CARDS = 6;
+const MAX_CARDS = 12;
+// A failed Proxmox call keeps showing the last good numbers for a while instead of blanking the rings.
+const STALE_MS = 2 * 60 * 1000;
+const lastGood = { host: null, cts: null };
 // Log each failure once when it starts, not on every 5s poll while it lasts.
 const lastError = {};
 
@@ -72,8 +75,11 @@ export default async function handler(req, res) {
   report('proxmox-ct', cts);
   report('agent', agent);
 
-  const h = host.status === 'fulfilled' ? host.value : null;
-  const list = cts.status === 'fulfilled' ? cts.value : null;
+  if (host.status === 'fulfilled') lastGood.host = { v: host.value, at: Date.now() };
+  if (cts.status === 'fulfilled') lastGood.cts = { v: cts.value, at: Date.now() };
+  const fresh = (x) => (x && Date.now() - x.at < STALE_MS ? x.v : null);
+  const h = fresh(lastGood.host);
+  const list = fresh(lastGood.cts);
   const services = [
     ...cfg.containers.map(n => list ? containerChip(n, list.find(c => c.name === n)) : { name: n, state: 'warn', note: 'no data' }),
     ...(agent.status === 'fulfilled' ? agent.value.services : []),

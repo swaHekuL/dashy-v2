@@ -32,6 +32,12 @@ export default function handler(req, res) {
     { project: 'home-agent',         state: 'idle' },
     { project: 'workout-tracker',    state: 'idle' },
     { project: 'jkmc',               state: 'idle' },
+    { project: 'recipes',            state: 'review' },
+    { project: 'job-search',         state: 'working' },
+    { project: 'room-projector',     state: 'idle' },
+    { project: 'wedding-planning',   state: 'idle' },
+    { project: 'ideas',              state: 'idle' },
+    { project: 'random',             state: 'idle' },
   ];
 
   res.setHeader('Cache-Control', 'no-store');

@@ -62,8 +62,8 @@ function SessionCard({ s }) {
   const hot = s.state === 'blocked' || s.state === 'failed';
   return (
     <div style={{
-      display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.4vh', minWidth: 0,
-      background: '#111', borderRadius: '8px', padding: '0 1.2vw',
+      display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.1vh', minWidth: 0,
+      background: '#111', borderRadius: '6px', padding: '0 1.2vw',
       border: `2px solid ${hot ? meta.color : '#1a1a1a'}`,
       boxShadow: hot ? `0 0 14px ${meta.color}55` : 'none',
     }}>
@@ -71,7 +71,7 @@ function SessionCard({ s }) {
         <span style={{ width: '1.4vw', height: '1.4vw', borderRadius: '50%', background: meta.color, flexShrink: 0 }} />
         <span style={{ color: '#fff', fontSize: '2vw', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.project}</span>
       </span>
-      <span style={{ color: meta.color, fontSize: '1.6vw', fontWeight: 700, letterSpacing: hot ? '0.08em' : 0, paddingLeft: '2.2vw' }}>{meta.label}</span>
+      <span style={{ color: meta.color, fontSize: '1.5vw', lineHeight: 1.1, fontWeight: 700, letterSpacing: hot ? '0.08em' : 0, paddingLeft: '2.2vw' }}>{meta.label}</span>
     </div>
   );
 }
@@ -95,7 +95,7 @@ export default function Ops({ data }) {
 
   const col = { display: 'flex', flexDirection: 'column', gap: '2vh', minHeight: 0, minWidth: 0 };
   return (
-    <div style={{ width: '100%', height: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2vw', padding: '2vh 2vw', boxSizing: 'border-box' }}>
+    <div style={{ width: '100%', height: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2vw', padding: '2vh 2vw', boxSizing: 'border-box', fontFamily: 'Arial, Helvetica, sans-serif' }}>
       <div style={col}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <span style={LABEL}>Server</span>
@@ -116,7 +116,7 @@ export default function Ops({ data }) {
           <span style={LABEL}>Agents</span>
           <span style={{ ...LABEL, color: needs ? AMBER : '#9aa0a6' }}>{summary.join(' · ')}</span>
         </div>
-        <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', gridAutoRows: '1fr', gap: '1.5vh 1vw' }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'repeat(6, 1fr)', gap: '1vh 1vw' }}>
           {data.sessions == null && <span style={{ ...LABEL, color: RED }}>no session data</span>}
           {sorted.map(s => <SessionCard key={s.project + s.state} s={s} />)}
         </div>
