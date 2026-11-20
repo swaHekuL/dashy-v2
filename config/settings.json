@@ -13,5 +13,10 @@
     "port": 25565,
     "metricsPort": 19565,
     "container": "minecraft"
+  },
+  "ops": {
+    "agentUrl": "http://192.168.68.152:8788/",
+    "printer": { "host": "192.168.68.58", "port": 631 },
+    "containers": ["minecraft", "claude-agent", "history"]
   }
 }

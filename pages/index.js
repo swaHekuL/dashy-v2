@@ -10,6 +10,7 @@ import Stocks from '../screens/Stocks';
 import Portfolio from '../screens/Portfolio';
 import Camera from '../screens/Camera';
 import Minecraft from '../screens/Minecraft';
+import Ops from '../screens/Ops';
 import StatusBar from '../screens/StatusBar';
 import DebugOverlay from '../components/DebugOverlay';
 import { recordFetch } from '../lib/debugStore';
@@ -22,12 +23,15 @@ const PANELS = [
   // 'stocks',
   'portfolio',
   'minecraft',
+  'ops',
 ];
 
 const CAMERAS = ['tapo', 'ring'];
 
 const PANEL_MS = 10000;
 const INACTIVITY_MS = 30000;
+// Ops is reached by hand and held (not part of the auto-rotation) until this long after the last key.
+const OPS_HOLD_MS = 12 * 60 * 60 * 1000;
 const CAMERA_KEY = 'Escape';
 
 const REFRESH_MS = {
@@ -44,6 +48,7 @@ const REFRESH_MS = {
   stocks:            5 * 60 * 1000,
   portfolio:         60 * 60 * 1000,
   minecraft:         30 * 1000,
+  ops:               15 * 1000, // plus every 5 s while the panel is showing, see below
 };
 
 const NEWS_LABELS = {
@@ -54,6 +59,13 @@ const NEWS_LABELS = {
   'news-utah':   'Utah News',
 };
 
+// Next panel for the timed rotation: ops is skipped, it is only reached with the remote.
+const nextRotating = (i) => {
+  let n = (i + 1) % PANELS.length;
+  while (PANELS[n] === 'ops') n = (n + 1) % PANELS.length;
+  return n;
+};
+
 export default function Home() {
   const [panelIndex, setPanelIndex] = useState(0);
   const [showCamera, setShowCamera] = useState(false);
@@ -62,7 +74,7 @@ export default function Home() {
     weather: null, calendar: null, gmail: null,
     'news-world': null, 'news-gaming': null, 'news-tech': null,
     'news-sports': null, 'news-utah': null,
-    steamData: null, stocks: null, portfolio: null, minecraft: null,
+    steamData: null, stocks: null, portfolio: null, minecraft: null, ops: null,
   });
   const [notifications, setNotifications] = useState([]);
   // Non-default chart ranges chosen with the remote's "b" button: { minecraft: { n, charts } }.
@@ -97,8 +109,9 @@ export default function Home() {
   };
 
   useEffect(() => {
-    PANELS.forEach(p => fetchPanel(p));
-    const intervals = PANELS.map(p => setInterval(() => fetchPanel(p), REFRESH_MS[p]));
+    const timed = PANELS.filter(p => REFRESH_MS[p]);
+    timed.forEach(p => fetchPanel(p));
+    const intervals = timed.map(p => setInterval(() => fetchPanel(p), REFRESH_MS[p]));
     return () => intervals.forEach(clearInterval);
   }, []);
 
@@ -158,19 +171,34 @@ export default function Home() {
     return () => clearInterval(id);
   }, [fetchRange]);
 
+  // Ops shows live state: fetch the moment it comes up, then every 5 s while it is on screen.
+  useEffect(() => {
+    if (PANELS[panelIndex] !== 'ops' || showCamera) return;
+    fetchPanel('ops');
+    const id = setInterval(() => fetchPanel('ops'), 5000);
+    return () => clearInterval(id);
+  }, [panelIndex, showCamera]);
+
+  // Preview helper: /?panel=ops jumps straight to a panel and stays there until a remote key.
+  useEffect(() => {
+    const want = new URLSearchParams(window.location.search).get('panel');
+    const i = PANELS.indexOf(want);
+    if (i >= 0) { setPanelIndex(i); resetInactivityTimer(PANELS[i]); }
+  }, []);
+
   const startRotation = useCallback(() => {
     clearInterval(rotationRef.current);
     rotationRef.current = setInterval(
-      () => setPanelIndex(i => (i + 1) % PANELS.length),
+      () => setPanelIndex(i => nextRotating(i)),
       PANEL_MS
     );
   }, []);
 
-  const resetInactivityTimer = useCallback(() => {
+  const resetInactivityTimer = useCallback((panel) => {
     clearInterval(rotationRef.current);
     rotationRef.current = null;
     clearTimeout(resumeTimerRef.current);
-    resumeTimerRef.current = setTimeout(startRotation, INACTIVITY_MS);
+    resumeTimerRef.current = setTimeout(startRotation, panel === 'ops' ? OPS_HOLD_MS : INACTIVITY_MS);
   }, [startRotation]);
 
   useEffect(() => {
@@ -190,7 +218,8 @@ export default function Home() {
         if (showCamera) {
           setShowCamera(false);
           setCamIndex(0);
-          startRotation();
+          if (PANELS[panelIndex] === 'ops') resetInactivityTimer('ops');
+          else startRotation();
         } else {
           setShowCamera(true);
         }
@@ -198,7 +227,7 @@ export default function Home() {
       }
 
       if (e.key === RANGE_KEY && !showCamera) {
-        if (cycleRange(PANELS[panelIndex])) resetInactivityTimer();
+        if (cycleRange(PANELS[panelIndex])) resetInactivityTimer(PANELS[panelIndex]);
         return;
       }
 
@@ -210,10 +239,10 @@ export default function Home() {
         if (isRight) setCamIndex(i => (i + 1) % CAMERAS.length);
         if (isLeft)  setCamIndex(i => (i - 1 + CAMERAS.length) % CAMERAS.length);
       } else {
-        if (isRight) setPanelIndex(i => (i + 1) % PANELS.length);
-        if (isLeft)  setPanelIndex(i => (i - 1 + PANELS.length) % PANELS.length);
+        const next = isRight ? (panelIndex + 1) % PANELS.length : (panelIndex - 1 + PANELS.length) % PANELS.length;
+        setPanelIndex(next);
         setShowCamera(false);
-        resetInactivityTimer();
+        resetInactivityTimer(PANELS[next]);
       }
     };
     window.addEventListener('keydown', handleKey);
@@ -221,6 +250,7 @@ export default function Home() {
   }, [resetInactivityTimer, startRotation, showCamera, cycleRange, panelIndex]);
 
   const current = PANELS[panelIndex];
+  const needsYou = (data.ops?.sessions ?? []).filter(s => s.state === 'blocked' || s.state === 'failed').length;
   const withRange = (panel, d) => {
     const o = rangeOverride[panel];
     return d && o ? { ...d, charts: o.charts ?? d.charts, chartRange: rangeLabel(panel, o.n) } : d;
@@ -228,7 +258,17 @@ export default function Home() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      {!showCamera && <Clock notifications={notifications} />}
+      {needsYou > 0 && current !== 'ops' && (
+        <div style={{
+          position: 'fixed', top: '6px', left: '6px', zIndex: 50,
+          background: '#ffb300', color: '#000', fontFamily: 'monospace', fontWeight: 700,
+          fontSize: '14px', padding: '2px 8px', borderRadius: '4px',
+          boxShadow: '0 0 10px #ffb30088',
+        }}>
+          {needsYou} NEED{needsYou === 1 ? 'S' : ''} YOU
+        </div>
+      )}
+      {!showCamera && current !== 'ops' && <Clock notifications={notifications} />}
       <div style={{ flex: 1, overflow: 'hidden', background: '#000' }}>
         {showCamera ? (
           <Camera activeCam={CAMERAS[camIndex]} />
@@ -243,6 +283,7 @@ export default function Home() {
             {current === 'stocks'         && <Stocks        data={data.stocks}   />}
             {current === 'portfolio'      && <Portfolio     data={withRange('portfolio', data.portfolio)} />}
             {current === 'minecraft'      && <Minecraft     data={withRange('minecraft', data.minecraft)} />}
+            {current === 'ops'            && <Ops           data={data.ops} />}
           </>
         )}
       </div>
